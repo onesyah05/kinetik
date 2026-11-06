@@ -1,5 +1,10 @@
 # Changelog
 
+## Belum dirilis
+
+### Baru
+- **Edge TTS jadi cadangan Gemini**: kalau kuota gratis Gemini TTS habis (atau Gemini sedang sibuk), narasi otomatis dibuat dengan suara Edge yang gratis, jadi video tetap jalan. Suara Edge dipilih dengan jenis kelamin yang sama (misalnya Puck → Ardi, Aoede → Gadis). Kinetik ingat kuota sedang habis dan tidak mencoba Gemini lagi sampai kuota direset (tengah malam waktu Pasifik, sekitar pukul 15.00 WIB). Agent memberi tahu di chat kalau suara cadangan dipakai.
+
 ## v0.6.0 — 2026-11-07
 
 ### Baru

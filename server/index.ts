@@ -34,7 +34,7 @@ import {savePublic} from './media';
 import {checkProject} from './check';
 import {anyRenderActive, cancelRender, closeBrowser, listJobs, startRender, warmupBrowser} from './render';
 import {checkForUpdate, requestUpdate, versionInfo} from './update';
-import {checkReel, draftCaption, publishReel, readRenderMeta, reelPostState, testFacebook, trendingTopics} from './facebook';
+import {publishReel, readRenderMeta, reelPostState, testFacebook} from './facebook';
 import {listVoices, synthesizeTest} from './tts';
 import {dropBundle} from './bundle';
 import {anyAgentRunning, clearHistory, isRunning, loadHistory, runAgent, stopAgent} from './agent/agent';
@@ -286,11 +286,9 @@ app.get(
 
 // ---------- Facebook Reels ----------
 app.post('/api/facebook/test', h((req) => testFacebook(req.body?.pageId, MASK.test(req.body?.pageToken ?? '') ? undefined : req.body?.pageToken)));
-app.get('/api/facebook/trends', h(async (req) => ({topics: await trendingTopics(String(req.query.region || getConfig().facebook?.trendRegion || 'ID'))})));
-app.get('/api/projects/:id/renders/:file/reel', h((req) => checkReel(pid(req), String(req.params.file))));
-app.post('/api/projects/:id/renders/:file/caption', h((req) => draftCaption(pid(req), String(req.params.file))));
 app.post(
   '/api/projects/:id/renders/:file/reel',
+  // An empty body means one-click posting: the AI writes the caption and hashtags.
   h((req) => publishReel(pid(req), String(req.params.file), req.body ?? {})),
 );
 app.post('/api/projects/:id/render', h((req) => startRender(pid(req), req.body?.quality, req.body?.videos)));

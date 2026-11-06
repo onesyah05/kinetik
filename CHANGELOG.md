@@ -3,9 +3,9 @@
 ## v0.6.0 — 2026-11-07
 
 ### Baru
-- **Posting ke Facebook Reels**: setiap hasil render punya tombol **Post to Reels**. Isi **Page ID** dan **Page access token** sekali di **Settings → Facebook Reels** (ada tombol **Test connection**).
-- **Caption & hashtag dari AI**: caption ditulis dari narasi video. Hashtag dibuat huruf kecil semua: campuran tag populer Reels, tag sesuai topik, dan topik yang sedang tren di Google Trends (negaranya bisa dipilih) kalau memang cocok. Tren hari ini tampil sebagai pilihan yang bisa diklik.
-- Pilih **Publish now** atau **Save as draft**. Bisa ditandai **AI-generated**.
+- **Posting ke Facebook Reels dengan satu klik**: setiap hasil render punya tombol **Post to Reels**. Sekali klik, AI menulis caption dan hashtag, lalu video langsung diunggah dan dipublikasikan. Isi **Page ID** dan **Page access token** sekali di **Settings → Facebook Reels** (ada tombol **Test connection**).
+- **Caption & hashtag dari AI**: caption ditulis dari narasi video. Hashtag dibuat huruf kecil semua: campuran tag populer Reels, tag sesuai topik, dan topik yang sedang tren di Google Trends kalau memang cocok (negaranya diatur di Settings). Caption yang diposting ditampilkan di bawah videonya.
+- Label **AI-generated** otomatis (bisa dimatikan di Settings).
 - Sebelum mengunggah, Kinetik mengecek syarat Reels (9:16, 3–90 detik, minimal 540×960, 24–60 fps) dan batas 30 posting per 24 jam.
 - Progres unggah tampil langsung. Video yang sudah diposting diberi tanda **Posted to Facebook Reels** dengan link-nya.
 - Setiap render kini mencatat video mana asalnya (berkas `.json` di samping MP4).

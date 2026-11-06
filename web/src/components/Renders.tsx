@@ -13,7 +13,6 @@ import {
   type VideoEntry,
 } from '../api';
 import type {Bus} from './ProjectView';
-import {ReelPostDialog} from './ReelPostDialog';
 
 const MAIN = 'main';
 
@@ -25,8 +24,23 @@ const QUALITIES: {id: Quality; label: string; sub: string}[] = [
 
 export const Renders: React.FC<{project: Project; bus: Bus; onOpenSettings?: () => void}> = ({project, bus, onOpenSettings}) => {
   const [files, setFiles] = useState<RenderFile[]>([]);
-  const [posting, setPosting] = useState<RenderFile | null>(null);
-  const reelBusy = (f: RenderFile) => !!f.facebook && !['done', 'error'].includes(f.facebook.status);
+  // Live Reels posting state per file (from fb_progress events), plus errors raised before it starts.
+  const [reels, setReels] = useState<Record<string, ReelPost>>({});
+  const [reelErrors, setReelErrors] = useState<Record<string, string>>({});
+  const reelOf = (f: RenderFile) => reels[f.file] ?? f.facebook;
+  const reelBusy = (r?: ReelPost) => !!r && !['done', 'error'].includes(r.status);
+
+  /** One click: the server writes the caption and hashtags with AI, uploads and publishes. */
+  const postReel = async (f: RenderFile) => {
+    if (reelOf(f)?.status === 'done' && !confirm('This video is already on Facebook. Post it again as a new Reel?')) return;
+    setReelErrors((m) => ({...m, [f.file]: ''}));
+    try {
+      const post = await api.postReel(project.id, f.file);
+      setReels((m) => ({...m, [f.file]: post}));
+    } catch (e: any) {
+      setReelErrors((m) => ({...m, [f.file]: e.message}));
+    }
+  };
   const [job, setJob] = useState<RenderJob | null>(null);
   const [quality, setQuality] = useState<Quality>('standard');
   const [error, setError] = useState('');
@@ -66,8 +80,13 @@ export const Renders: React.FC<{project: Project; bus: Bus; onOpenSettings?: () 
   useEffect(
     () =>
       bus.subscribe((e) => {
-        // A Reel finished or failed: refresh the "posted" badges.
-        if (e.type === 'fb_progress' && ['done', 'error'].includes((e.post as ReelPost).status)) load();
+        if (e.type === 'fb_progress') {
+          const post = e.post as ReelPost;
+          setReels((m) => ({...m, [e.file as string]: post}));
+          // Finished: reload so the saved "posted" badge comes from disk.
+          if (post.status === 'done') load();
+          return;
+        }
         if (e.type !== 'render_progress') return;
         setJob(e.job);
         // Show each finished video as soon as it is written, not only at the end.
@@ -216,19 +235,22 @@ export const Renders: React.FC<{project: Project; bus: Bus; onOpenSettings?: () 
                 <div className="small faint mono" style={{marginTop: 4}}>
                   {formatBytes(f.size)} · {new Date(f.createdAt).toLocaleString()}
                 </div>
-                {f.facebook?.status === 'done' && f.facebook.url && (
-                  <a className="reel-posted" href={f.facebook.url} target="_blank" rel="noreferrer" style={{marginTop: 8}}>
-                    <Check size={14} /> {f.facebook.state === 'DRAFT' ? 'Draft on Facebook' : 'Posted to Facebook Reels'}
-                    {f.facebook.postedAt ? ` · ${new Date(f.facebook.postedAt).toLocaleDateString()}` : ''}
-                    <ExternalLink size={12} />
-                  </a>
-                )}
+                <ReelStatus
+                  post={reelOf(f)}
+                  error={reelErrors[f.file]}
+                  onOpenSettings={/Settings/.test(reelErrors[f.file] ?? '') ? onOpenSettings : undefined}
+                />
                 <div className="row" style={{marginTop: 12}}>
                   <a className="btn sm" href={url} download={f.file}>
                     <Download size={16} /> Download
                   </a>
-                  <button className="btn sm" onClick={() => setPosting(f)} title="Post this video to your Facebook Page as a Reel">
-                    <Send size={16} /> {reelBusy(f) ? 'Posting…' : 'Post to Reels'}
+                  <button
+                    className="btn sm"
+                    onClick={() => postReel(f)}
+                    disabled={reelBusy(reelOf(f))}
+                    title="AI writes the caption and hashtags, then posts this video to your Facebook Page as a Reel"
+                  >
+                    <Send size={16} /> {reelBusy(reelOf(f)) ? 'Posting…' : reelOf(f)?.status === 'error' ? 'Try again' : 'Post to Reels'}
                   </button>
                   <button className="btn sm ghost danger" onClick={() => remove(f)}>
                     <Trash2 size={16} />
@@ -239,19 +261,65 @@ export const Renders: React.FC<{project: Project; bus: Bus; onOpenSettings?: () 
           );
         })}
         <div className="hint mono">workspace/{project.id}/renders/</div>
-        {posting && (
-          <ReelPostDialog
-            projectId={project.id}
-            file={files.find((f) => f.file === posting.file) ?? posting}
-            bus={bus}
-            onOpenSettings={onOpenSettings}
-            onClose={() => {
-              setPosting(null);
-              load();
-            }}
-          />
+      </div>
+    </div>
+  );
+};
+
+const REEL_STEP: Record<ReelPost['status'], string> = {
+  writing: 'AI is writing the caption and hashtags…',
+  starting: 'Starting upload…',
+  uploading: 'Uploading to Facebook',
+  publishing: 'Publishing…',
+  processing: 'Facebook is processing the video…',
+  done: '',
+  error: '',
+};
+
+/** Inline Reels status under a render: progress, the posted link and caption, or the error. */
+const ReelStatus: React.FC<{post?: ReelPost; error?: string; onOpenSettings?: () => void}> = ({post, error, onOpenSettings}) => {
+  if (error)
+    return (
+      <div className="reel-status bad">
+        <span className="grow">{error}</span>
+        {onOpenSettings && (
+          <button className="btn sm" onClick={onOpenSettings}>
+            Open Settings
+          </button>
         )}
       </div>
+    );
+  if (!post) return null;
+  if (post.status === 'error') return <div className="reel-status bad">{post.error}</div>;
+  if (post.status === 'done')
+    return (
+      <div className="reel-status">
+        {post.url ? (
+          <a className="reel-posted" href={post.url} target="_blank" rel="noreferrer">
+            <Check size={14} /> {post.state === 'DRAFT' ? 'Draft on Facebook' : 'Posted to Facebook Reels'}
+            {post.postedAt ? ` · ${new Date(post.postedAt).toLocaleString()}` : ''}
+            <ExternalLink size={12} />
+          </a>
+        ) : null}
+        {post.note && <div className="faint small">{post.note}</div>}
+        {post.description && <div className="reel-desc">{post.description}</div>}
+      </div>
+    );
+  return (
+    <div className="reel-status">
+      <div className="row small">
+        <span className="tally on">
+          <i />
+        </span>
+        <span className="grow">
+          {REEL_STEP[post.status]}
+          {post.status === 'uploading' ? ` · ${Math.round(post.progress * 100)}%` : ''}
+        </span>
+      </div>
+      <div className={`progress ${post.status === 'uploading' ? '' : 'indeterminate'}`}>
+        <div style={post.status === 'uploading' ? {transform: `scaleX(${post.progress})`} : undefined} />
+      </div>
+      {post.description && <div className="reel-desc">{post.description}</div>}
     </div>
   );
 };

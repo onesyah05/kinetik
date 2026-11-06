@@ -71,9 +71,10 @@ export type RenderJob = {
   finishedAt?: number;
 };
 export type ReelPost = {
-  status: 'starting' | 'uploading' | 'processing' | 'publishing' | 'done' | 'error';
+  status: 'writing' | 'starting' | 'uploading' | 'processing' | 'publishing' | 'done' | 'error';
   progress: number;
   state: 'PUBLISHED' | 'DRAFT';
+  description?: string;
   videoId?: string;
   url?: string;
   note?: string;
@@ -81,8 +82,7 @@ export type ReelPost = {
   postedAt?: number;
 };
 export type RenderFile = {file: string; size: number; createdAt: number; videoName?: string; facebook?: ReelPost};
-export type ReelCheck = {width?: number; height?: number; fps?: number; seconds?: number; hasAudio?: boolean; problems: string[]; warnings: string[]};
-export type CaptionDraft = {caption: string; hashtags: string[]; trends: string[]};
+
 
 export type SubAccount = {id: string; kind: 'codex' | 'claude' | 'antigravity' | 'muse'; label: string; expiresAt: number; defaultModel: string};
 export type LoginStatus =
@@ -208,10 +208,8 @@ export const api = {
   // Facebook Reels
   testFacebook: (pageId: string, pageToken: string) =>
     req<{id: string; name: string; warning?: string}>('POST', '/api/facebook/test', {pageId, pageToken}),
-  reelCheck: (id: string, file: string) => req<ReelCheck>('GET', `${P(id)}/renders/${encodeURIComponent(file)}/reel`),
-  reelCaption: (id: string, file: string) => req<CaptionDraft>('POST', `${P(id)}/renders/${encodeURIComponent(file)}/caption`),
-  postReel: (id: string, file: string, b: {description: string; state: 'PUBLISHED' | 'DRAFT'; aiLabel: boolean}) =>
-    req<ReelPost>('POST', `${P(id)}/renders/${encodeURIComponent(file)}/reel`, b),
+  /** One click: the server writes the caption with AI, then uploads and publishes. */
+  postReel: (id: string, file: string) => req<ReelPost>('POST', `${P(id)}/renders/${encodeURIComponent(file)}/reel`, {}),
 };
 
 export const publicUrl = (id: string, rel: string) => `/ws/${id}/public/${rel.split('/').map(encodeURIComponent).join('/')}`;

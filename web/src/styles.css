@@ -454,16 +454,8 @@ svg.lucide { stroke-width: 1.5px; flex: none; }
 @media (prefers-reduced-motion: reduce) { .progress.indeterminate > div { animation: none; width: 100%; opacity: 0.6; } }
 
 /* ---------- Facebook Reels ---------- */
-.reel-note { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 16px; border-radius: var(--r); background: var(--field); border: 1px solid var(--line); font-size: 13px; }
-.reel-warn { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; color: var(--warn); font-size: 13px; line-height: 18px; }
-.reel-warn svg { flex: none; margin-top: 2px; }
-.reel-caption { min-height: 120px; resize: vertical; line-height: 20px; padding-top: 10px; padding-bottom: 10px; font-family: inherit; }
-.reel-trends { display: flex; flex-wrap: wrap; gap: 6px; }
-.reel-chip {
-  height: 28px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--line); background: transparent; color: var(--muted);
-  font-family: 'Geist Mono Variable', monospace; font-size: 12px; cursor: pointer; transition: border-color 140ms var(--ease), color 140ms var(--ease);
-}
-.reel-chip:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
-.reel-chip.on { border-color: rgba(76, 195, 138, 0.5); color: var(--ok); cursor: default; }
+.reel-status { display: grid; gap: 8px; margin-top: 10px; font-size: 13px; }
+.reel-status.bad { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r); background: rgba(229, 72, 77, 0.1); border: 1px solid rgba(229, 72, 77, 0.28); color: #f3b4b6; word-break: break-word; }
 .reel-posted { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ok); text-decoration: none; }
 .reel-posted:hover { text-decoration: underline; }
+.reel-desc { padding: 8px 10px; border-radius: var(--r); background: var(--field); border: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 18px; white-space: pre-wrap; max-height: 112px; overflow: auto; }

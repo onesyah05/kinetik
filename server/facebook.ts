@@ -20,9 +20,11 @@ const DAILY_LIMIT = 30;
 export type FacebookSettings = NonNullable<Config['facebook']>;
 
 export type ReelPost = {
-  status: 'starting' | 'uploading' | 'processing' | 'publishing' | 'done' | 'error';
+  status: 'writing' | 'starting' | 'uploading' | 'processing' | 'publishing' | 'done' | 'error';
   progress: number;
   state: 'PUBLISHED' | 'DRAFT';
+  /** The caption and hashtags that were (or are being) posted. */
+  description?: string;
   videoId?: string;
   url?: string;
   note?: string;
@@ -364,7 +366,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const publishReel = (
   projectId: string,
   file: string,
-  opts: {description: string; state?: 'PUBLISHED' | 'DRAFT'; aiLabel?: boolean},
+  /** Without a description the AI writes the caption and hashtags first (one-click posting). */
+  opts: {description?: string; state?: 'PUBLISHED' | 'DRAFT'; aiLabel?: boolean} = {},
 ): ReelPost => {
   const fb = settings();
   const k = key(projectId, file);
@@ -376,15 +379,28 @@ export const publishReel = (
   if (check.problems.length) throw new Error(check.problems.join(' '));
   if (recentPosts(fb.pageId).length >= DAILY_LIMIT)
     throw new Error(`Facebook allows ${DAILY_LIMIT} Reels per Page every 24 hours through the API, and this Page has reached it. Try again later.`);
-  const description = String(opts.description ?? '').trim().slice(0, 2200);
+  const given = String(opts.description ?? '').trim();
   const state = opts.state === 'DRAFT' ? 'DRAFT' : 'PUBLISHED';
-  const post: ReelPost = {status: 'starting', progress: 0, state};
+  const aiLabel = opts.aiLabel ?? fb.aiLabel ?? true;
+  const post: ReelPost = {status: given ? 'starting' : 'writing', progress: 0, state, ...(given ? {description: given} : {})};
   active.set(k, post);
   const publish = () => emit({type: 'fb_progress', projectId, file, post: {...post}});
   publish();
 
   (async () => {
     try {
+      // 0. One click: let the AI write the caption and lowercase hashtags.
+      let description = given;
+      if (!description) {
+        const d = await draftCaption(projectId, file);
+        description = [d.caption, d.hashtags.join(' ')].filter(Boolean).join('\n\n');
+        if (!description) throw new Error('The AI returned an empty caption. Try again.');
+        post.description = description;
+        post.status = 'starting';
+        publish();
+      }
+      description = description.slice(0, 2200);
+
       // 1. Open an upload session.
       const started = await graphPost(`${encodeURIComponent(fb.pageId)}/video_reels`, {upload_phase: 'start', access_token: fb.pageToken}, 'Could not start the upload');
       const videoId = String(started.video_id ?? '');
@@ -470,7 +486,7 @@ export const publishReel = (
           upload_phase: 'finish',
           video_state: state,
           description,
-          ...(opts.aiLabel ? {is_ai_generated: 'true'} : {}),
+          ...(aiLabel ? {is_ai_generated: 'true'} : {}),
         },
         'Could not publish the Reel',
       );

@@ -75,7 +75,7 @@ Semua video di bawah ini dibuat **sepenuhnya oleh agent Kinetik** dari satu kali
 | ✏️ | **Edit & kirim ulang** | Salah ketik? Edit pesanmu atau kirim ulang, agent mengulang dari titik itu. |
 | 👁️ | **Preview langsung** | Setiap perubahan kode langsung terlihat di preview, tanpa menunggu render. |
 | 💻 | **Render di laptop sendiri** | Hasil akhir MP4 dirender lokal. Gratis, privat, dan bisa offline setelah aset siap. |
-| 📲 | **Langsung posting ke Facebook Reels** | Satu klik dari hasil render. Caption dan hashtag yang sedang tren (huruf kecil semua) ditulis AI dan bisa kamu edit dulu. |
+| 📲 | **Langsung posting ke Facebook Reels** | Satu klik dari hasil render. Caption dan hashtag yang sedang tren (huruf kecil semua) ditulis AI, lalu langsung tayang. |
 
 ---
 
@@ -199,7 +199,7 @@ Saat dijalankan dari hasil clone, project disimpan di folder `workspace/` di dal
 
 **6. Render.** Klik tombol oranye **Render**, pilih kualitas, tunggu, lalu unduh MP4-nya dari tab **Renders**. Kalau project-mu punya beberapa video, centang video mana saja yang mau dirender (atau **Select all**). Setiap video jadi file MP4 sendiri.
 
-**7. Posting ke Facebook Reels (opsional).** Di setiap hasil render ada tombol **Post to Reels**. AI menulis caption dari narasi videonya, plus hashtag huruf kecil yang sedang ramai. Kamu bisa mengedit keduanya, menambah hashtag dari daftar tren Google, lalu klik **Post Reel**, atau simpan sebagai draft.
+**7. Posting ke Facebook Reels (opsional).** Di setiap hasil render ada tombol **Post to Reels**. Cukup sekali klik: AI menulis caption dari narasi videonya plus hashtag huruf kecil yang sedang ramai, lalu video langsung diunggah dan tayang di Halamanmu. Caption yang diposting ditampilkan di bawah videonya.
 
 **Bonus — bikin seri video:** klik **New video** di atas, tulis beberapa tema (satu per baris), dan agent membuat semuanya dengan gaya yang sama.
 

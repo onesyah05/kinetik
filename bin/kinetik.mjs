@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Kinetik command line: `kinetik` (or `kinetik start`) runs the app, plus a few helpers.
-import {spawnSync} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {UPDATE_EXIT_CODE, compareVersions, currentVersion, fetchLatest, installMethod, performUpdate} from './update.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
@@ -69,6 +70,8 @@ const help = () => {
     kinetik doctor          Check FFmpeg, Python and the data folder
     kinetik setup           Install the Python packages (voiceover, transparent images)
     kinetik cli [project]   Chat with the agent in the terminal
+    kinetik update          Install the newest version (projects are kept)
+      --check               Only check, don't install
     kinetik home            Show where projects and settings are stored
     kinetik --version       Show the version
 
@@ -104,14 +107,98 @@ const setup = () => {
   process.exit(r.status ?? 1);
 };
 
+/** Print a one-line notice when a newer release exists (never blocks startup). */
+const announceUpdate = () =>
+  fetchLatest(5000).then((latest) => {
+    if (latest && compareVersions(latest.version, currentVersion()) > 0)
+      console.log(`  ${c.orange('↑')} Kinetik v${latest.version} is available. Click ${c.bold('Update')} in the app, or run ${c.bold('kinetik update')}.\n`);
+  });
+
+/**
+ * `kinetik start` keeps a small parent process around the server. When the server asks
+ * for an update (Update button), it exits with UPDATE_EXIT_CODE; the parent installs
+ * the new version in this same terminal and starts the server again.
+ */
+const supervise = async () => {
+  banner();
+  if (!has('ffmpeg')) console.log(`  ${c.red('!')} FFmpeg not found: rendering MP4 will fail. Run ${c.bold('kinetik doctor')} for help.\n`);
+  else if (!pyModulesOk()) console.log(`  ${c.red('!')} Voiceover needs Python packages. Run ${c.bold('kinetik setup')} once.\n`);
+  if (!process.env.KINETIK_NO_UPDATE_CHECK) announceUpdate();
+  let open = !flag('no-open');
+  let stopping = false;
+  let child = null;
+  // Ctrl+C reaches the server too; just wait for it to close instead of dying first.
+  process.on('SIGINT', () => (stopping = true));
+  process.on('SIGTERM', () => {
+    stopping = true;
+    child?.kill('SIGTERM');
+  });
+  for (;;) {
+    const env = {...process.env, KINETIK_CHILD: '1', KINETIK_SUPERVISED: '1', KINETIK_OPEN: open ? '1' : ''};
+    child = spawn(process.execPath, [path.join(ROOT, 'bin', 'kinetik.mjs'), 'start', ...args.filter((a) => a !== 'start' && a !== 'serve')], {stdio: 'inherit', env});
+    const code = await new Promise((resolve) => child.on('exit', (code, signal) => resolve(code ?? (signal ? 1 : 0))));
+    if (stopping || code !== UPDATE_EXIT_CODE) {
+      process.exitCode = code;
+      return;
+    }
+    // Update requested from the app. The page reloads by itself, so don't open another tab.
+    await performUpdate();
+    open = false;
+    console.log('  Starting Kinetik again…\n');
+  }
+};
+
 switch (command) {
   case 'start':
   case 'serve': {
+    if (process.env.KINETIK_CHILD === '1') await runTs('server/index.ts');
+    else await supervise();
+    break;
+  }
+  case 'update': {
     banner();
-    if (!has('ffmpeg')) console.log(`  ${c.red('!')} FFmpeg not found: rendering MP4 will fail. Run ${c.bold('kinetik doctor')} for help.\n`);
-    else if (!pyModulesOk()) console.log(`  ${c.red('!')} Voiceover needs Python packages. Run ${c.bold('kinetik setup')} once.\n`);
-    if (!flag('no-open')) process.env.KINETIK_OPEN = '1';
-    await runTs('server/index.ts');
+    const current = currentVersion();
+    console.log(`  Installed: v${current}  ${c.dim(`(${installMethod()} install, ${ROOT})`)}`);
+    const latest = await fetchLatest();
+    if (!latest) {
+      console.log(`  ${c.red('Could not reach GitHub.')} Check the internet connection and try again.\n`);
+      process.exitCode = 1;
+      break;
+    }
+    console.log(`  Newest:    v${latest.version}\n`);
+    if (compareVersions(latest.version, current) <= 0) {
+      console.log(`  ${c.green('✓')} Kinetik is up to date.\n`);
+      break;
+    }
+    const notes = latest.notes.split(/\r?\n/).filter((l) => /^\s*[-*] /.test(l)).slice(0, 8);
+    if (notes.length) console.log(`  ${c.bold("What's new")}\n${notes.map((l) => `   ${l.trim().replace(/\*\*/g, '')}`).join('\n')}\n`);
+    if (flag('check')) {
+      console.log(`  Run ${c.bold('kinetik update')} to install it. ${c.dim(latest.url)}\n`);
+      break;
+    }
+    // If Kinetik is running, let it update itself: files in use can't be replaced on Windows.
+    const port = Number(process.env.PORT) || 3210;
+    const running = await fetch(`http://localhost:${port}/api/version`, {signal: AbortSignal.timeout(1500)})
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+    if (running?.root && path.resolve(running.root) === ROOT) {
+      const r = await fetch(`http://localhost:${port}/api/update`, {method: 'POST', headers: {'content-type': 'application/json'}, body: '{}'})
+        .then(async (res) => ({ok: res.ok, body: await res.json().catch(() => ({}))}))
+        .catch((e) => ({ok: false, body: {error: e.message}}));
+      if (r.ok) {
+        console.log(`  Kinetik is running, so it will update and restart itself. Watch the terminal where it runs; the browser page reloads when it is done.\n`);
+        break;
+      }
+      console.log(`  ${c.red('!')} ${r.body.error ?? 'The running Kinetik could not update itself.'}\n  Close Kinetik (Ctrl+C in its terminal) and run ${c.bold('kinetik update')} again.\n`);
+      process.exitCode = 1;
+      break;
+    }
+    const res = await performUpdate(latest);
+    if (!res.ok) {
+      process.exitCode = 1;
+      break;
+    }
+    console.log(`  Run ${c.bold('kinetik')} to start it.\n`);
     break;
   }
   case 'cli': {

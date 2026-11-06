@@ -92,7 +92,24 @@ const req = async <T,>(method: string, url: string, body?: unknown): Promise<T> 
 
 const P = (id: string) => `/api/projects/${encodeURIComponent(id)}`;
 
+export type UpdateResult = {ok: boolean; from: string; to: string; error?: string; at?: number};
+export type VersionInfo = {version: string; root: string; lastUpdate: UpdateResult | null};
+export type UpdateInfo = {
+  current: string;
+  latest?: string | null;
+  available: boolean;
+  notes?: string;
+  url?: string | null;
+  method?: 'git' | 'npm' | 'folder';
+  canSelfUpdate?: boolean;
+  command?: string;
+  disabled?: boolean;
+};
+
 export const api = {
+  version: () => req<VersionInfo>('GET', '/api/version'),
+  checkUpdate: (force = false) => req<UpdateInfo>('GET', `/api/update${force ? '?force=1' : ''}`),
+  startUpdate: () => req<{ok: boolean}>('POST', '/api/update', {}),
   config: () => req<Config>('GET', '/api/config'),
   saveConfig: (c: Config) => req<Config>('PUT', '/api/config', c),
   models: (b: {providerId?: string; baseURL: string; apiKey?: string}) => req<{models: string[]}>('POST', '/api/models', b),

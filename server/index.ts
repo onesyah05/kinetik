@@ -32,15 +32,20 @@ import {
 } from './projects';
 import {savePublic} from './media';
 import {checkProject} from './check';
-import {cancelRender, listJobs, startRender, warmupBrowser} from './render';
+import {anyRenderActive, cancelRender, closeBrowser, listJobs, startRender, warmupBrowser} from './render';
+import {checkForUpdate, requestUpdate, versionInfo} from './update';
 import {listVoices, synthesizeTest} from './tts';
 import {dropBundle} from './bundle';
-import {clearHistory, isRunning, loadHistory, runAgent, stopAgent} from './agent/agent';
+import {anyAgentRunning, clearHistory, isRunning, loadHistory, runAgent, stopAgent} from './agent/agent';
 import {subscriptionRouter} from './subscription/routes';
 import {syncSubscriptionProviders} from './subscription/sync';
 
 // npm installs keep projects in ~/Kinetik; give them the package's dependencies.
 linkDependencies();
+// Work from the data folder, wherever `kinetik` was typed: Remotion keeps its headless
+// Chrome (~300 MB) next to the working directory, so it must stay in one place.
+fs.mkdirSync(HOME, {recursive: true});
+process.chdir(HOME);
 
 const PORT = Number(process.env.PORT || 3210);
 const app = express();
@@ -82,6 +87,21 @@ const publicConfig = (c: Config) => ({
   stock: {pexelsKey: maskKey(c.stock.pexelsKey), unsplashKey: maskKey(c.stock.unsplashKey)},
   tts: {...c.tts, geminiKey: maskKey(c.tts.geminiKey)},
 });
+
+// ---------- Version and updates ----------
+app.get('/api/version', h(() => versionInfo()));
+app.get('/api/update', h((req) => checkForUpdate(req.query.force === '1')));
+app.post(
+  '/api/update',
+  h(async () => {
+    const busy = anyAgentRunning()
+      ? 'The agent is still working. Wait for it to finish (or stop it), then update.'
+      : anyRenderActive()
+        ? 'A render is running. Wait for it to finish (or cancel it), then update.'
+        : null;
+    return requestUpdate(busy, closeBrowser);
+  }),
+);
 
 app.get(
   '/api/config',

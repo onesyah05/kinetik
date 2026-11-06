@@ -10,6 +10,7 @@ import {Assets} from './Assets';
 import {Renders} from './Renders';
 import {ProjectSettingsPanel} from './ProjectSettings';
 import {VideoSwitcher} from './VideoSwitcher';
+import {UpdateButton} from './UpdateButton';
 
 export type Bus = {subscribe: (fn: (e: ServerEvent) => void) => () => void};
 
@@ -140,6 +141,7 @@ export const ProjectView: React.FC<{id: string; onOpenSettings: () => void}> = (
             </option>
           ))}
         </select>
+        <UpdateButton />
         <button className="btn ghost icon" onClick={onOpenSettings} title="Settings">
           <Settings size={16} />
         </button>

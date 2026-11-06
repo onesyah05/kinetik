@@ -4,7 +4,7 @@
 
 ### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
 
-[![Versi](https://img.shields.io/badge/versi-0.3.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Versi](https://img.shields.io/badge/versi-0.4.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
 [![npm](https://img.shields.io/npm/v/kinetik-studio?style=for-the-badge&color=0b0f1a&label=npm&logo=npm)](https://www.npmjs.com/package/kinetik-studio)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
@@ -118,17 +118,36 @@ Browser otomatis terbuka di **http://localhost:3210**. Selesai! 🎉
 | `kinetik doctor` | Mengecek Node.js, FFmpeg, Python, dan paketnya |
 | `kinetik setup` | Memasang paket Python (suara narasi, latar transparan) |
 | `kinetik cli` | Ngobrol dengan agent langsung di terminal |
+| `kinetik update` | Memasang versi terbaru (project tetap aman) |
+| `kinetik update --check` | Hanya mengecek apakah ada versi baru |
 | `kinetik home` | Menampilkan folder tempat project dan pengaturan disimpan |
 | `kinetik --version` | Menampilkan versi |
 
-**Project kamu aman saat update.** Semua project dan pengaturan disimpan di folder **`Kinetik`** di folder pengguna (contoh: `C:\Users\nama\Kinetik`), terpisah dari program. Update cukup dengan `npm install -g kinetik-studio@latest`.
+### 🔄 Update ke versi terbaru
+
+Kinetik mengecek versi baru sendiri. Kalau ada, muncul tombol oranye **Update to vX.Y.Z** di kanan atas aplikasi.
+
+1. Klik tombolnya untuk melihat apa saja yang baru.
+2. Klik **Update now**. Kinetik menutup diri, mengunduh versi baru, lalu menyala lagi. Halaman browser memuat ulang sendiri, biasanya dalam 1–3 menit.
+
+Lewat terminal juga bisa:
+
+```bash
+kinetik update
+```
+
+Cara ini berlaku untuk semua cara pasang: npm, ZIP, maupun clone git. Saat Kinetik dijalankan, terminal juga memberi tahu kalau ada versi baru.
+
+**Project kamu aman saat update.** Semua project, pengaturan, dan login disimpan di folder **`Kinetik`** di folder pengguna (contoh: `C:\Users\nama\Kinetik`), terpisah dari program.
+
+> Masih memakai versi 0.3.0 atau lebih lama? Update sekali dengan `npm install -g github:onesyah05/kinetik` (hasil clone: `git pull`). Setelah itu tombol Update sudah tersedia.
 
 <details>
 <summary><b>Cara lain: tanpa npm (Windows, klik dua kali)</b></summary>
 
 <br />
 
-1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.3.0.zip`**, lalu ekstrak.
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.4.0.zip`**, lalu ekstrak.
 2. Klik dua kali **`Start-Kinetik.bat`**. Saat pertama kali, kebutuhannya dipasang otomatis (beberapa menit, sekali saja).
 3. Browser terbuka di **http://localhost:3210**.
 
@@ -212,6 +231,8 @@ Video di Kinetik adalah **kode React** (memakai [Remotion](https://www.remotion.
 | Port 3210 sudah dipakai | Kinetik mungkin sudah berjalan di jendela lain. Atau pakai port lain: `kinetik --port 3300`. |
 | Perintah `kinetik` tidak dikenal | Tutup lalu buka lagi Terminal setelah `npm install -g`. Masih gagal? Cek `npm prefix -g` ada di PATH. |
 | macOS/Linux: `EACCES` saat `npm install -g` | Pasang Node lewat [nvm](https://github.com/nvm-sh/nvm) agar tidak perlu `sudo`. |
+| Update gagal | Tutup Kinetik (<kbd>Ctrl</kbd>+<kbd>C</kbd>), lalu jalankan `kinetik update` di terminal. Hasil clone yang kodenya kamu ubah: commit atau batalkan perubahannya dulu. |
+| Tidak ingin dicek update | Jalankan dengan variabel `KINETIK_NO_UPDATE_CHECK=1`. |
 | Ingin tahu apa yang kurang | Jalankan `kinetik doctor`. |
 
 ---

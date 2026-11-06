@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Plus, Settings, Trash2} from 'lucide-react';
 import {api, PRESETS, projectUrl, type Project} from '../api';
 import {go} from '../App';
+import {UpdateButton} from './UpdateButton';
 
 const ago = (t: number) => {
   const s = (Date.now() - t) / 1000;
@@ -62,6 +63,7 @@ export const Home: React.FC<{onOpenSettings: () => void}> = ({onOpenSettings}) =
       <div className="topbar">
         <Brand />
         <div className="grow" />
+        <UpdateButton />
         <button className="btn ghost" onClick={onOpenSettings}>
           <Settings size={16} /> Settings
         </button>

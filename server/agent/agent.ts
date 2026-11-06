@@ -144,6 +144,7 @@ type Run = {abort: AbortController};
 const runs = new Map<string, Run>();
 
 export const isRunning = (projectId: string) => runs.has(projectId);
+export const anyAgentRunning = () => runs.size > 0;
 export const stopAgent = (projectId: string) => runs.get(projectId)?.abort.abort();
 
 const send = (projectId: string, event: Record<string, unknown>) => emit({type: 'agent', projectId, ...event});

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0 — 2026-11-07
+
+### Baru
+- **Update dengan satu klik**: Kinetik mengecek versi baru sendiri. Kalau ada, tombol **Update to vX.Y.Z** muncul di kanan atas beserta catatan rilisnya. Klik **Update now**: Kinetik menutup diri, memasang versi baru, menyala lagi, lalu halaman browser memuat ulang sendiri.
+- **`kinetik update`** di terminal (`--check` untuk hanya mengecek). Kalau Kinetik sedang berjalan, perintah ini menyuruh Kinetik meng-update dirinya sendiri.
+- Saat `kinetik` dijalankan, terminal memberi tahu kalau ada versi baru.
+- Berlaku untuk semua cara pasang: npm, ZIP (`Start-Kinetik.bat`), dan clone git. Project, pengaturan, dan login tidak tersentuh.
+
+### Perbaikan
+- Chrome untuk render (~300 MB) sekarang disimpan di folder data Kinetik, tidak lagi di folder tempat `kinetik` diketik, jadi tidak diunduh ulang.
+- Update tidak akan berjalan selama agent bekerja atau render sedang berjalan.
+
 ## v0.3.0 — 2026-11-06
 
 ### Baru

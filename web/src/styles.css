@@ -427,3 +427,28 @@ svg.lucide { stroke-width: 1.5px; flex: none; }
 .video-switch { display: flex; align-items: center; gap: 6px; }
 .video-switch .select { width: 200px; height: 32px; }
 .video-error { cursor: pointer; color: var(--err); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Updates ---------- */
+.update-pill { color: var(--accent); border-color: rgba(255, 122, 69, 0.45); background: rgba(255, 122, 69, 0.08); }
+.update-pill:hover { background: rgba(255, 122, 69, 0.14); }
+.update-pill.quiet { color: var(--faint); border-color: var(--line); background: transparent; }
+.update-toast {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60; max-width: min(420px, calc(100vw - 32px));
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; border-radius: var(--r-card);
+  background: var(--glass-strong); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  border: 1px solid rgba(76, 195, 138, 0.4); color: var(--ok); font-size: 13px; animation: rise 260ms var(--ease);
+}
+.update-toast .grow { color: var(--text); }
+.update-toast.bad { border-color: rgba(229, 72, 77, 0.4); color: #f3b4b6; }
+.notes { font-size: 13px; line-height: 20px; }
+.notes p { margin: 0 0 8px; }
+.notes-h { font-weight: 500; margin: 16px 0 6px; }
+.notes-h:first-child { margin-top: 0; }
+.notes-li { position: relative; padding-left: 16px; margin-bottom: 6px; }
+.notes-li::before { content: ''; position: absolute; left: 4px; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+.notes-code { margin: 0 0 4px; padding: 6px 10px; border-radius: var(--r); background: var(--field); font-family: 'Geist Mono Variable', monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+.update-cmd { margin-top: 16px; padding: 12px; border-radius: var(--r); background: var(--field); border: 1px solid var(--line); }
+.update-cmd code { font-size: 12px; word-break: break-all; }
+.progress.indeterminate > div { width: 40%; animation: slide 1.2s var(--ease) infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) { .progress.indeterminate > div { animation: none; width: 100%; opacity: 0.6; } }

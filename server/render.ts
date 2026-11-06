@@ -47,6 +47,16 @@ const releaseBrowser = () => {
   }
 };
 
+/** Close the shared browser now (before the server exits for an update). */
+export const closeBrowser = async () => {
+  const b = browser;
+  browser = null;
+  if (b) await (await b.catch(() => null))?.close({silent: true}).catch(() => undefined);
+};
+
+/** True while any project is bundling or rendering. */
+export const anyRenderActive = () => [...jobs.values()].some((j) => j.status === 'bundling' || j.status === 'rendering');
+
 export const warmupBrowser = () => ensureBrowser().catch((e) => console.warn('[render] browser download failed:', e?.message));
 
 const inputPropsFor = (id: string) => ({settings: getProject(id)});

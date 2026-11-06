@@ -251,7 +251,7 @@ app.post('/api/projects/:id/stop', h((req) => (stopAgent(pid(req)), {ok: true}))
 
 // Renders
 app.get('/api/projects/:id/renders', h((req) => ({files: listRenders(pid(req)), jobs: listJobs(pid(req))})));
-app.post('/api/projects/:id/render', h((req) => startRender(pid(req), req.body?.quality)));
+app.post('/api/projects/:id/render', h((req) => startRender(pid(req), req.body?.quality, req.body?.videos)));
 app.post('/api/renders/:jobId/cancel', h((req) => (cancelRender(String(req.params.jobId)), {ok: true})));
 app.delete(
   '/api/projects/:id/renders/:file',

@@ -173,6 +173,12 @@ svg.lucide { stroke-width: 1.5px; flex: none; }
 .preset:hover { border-color: var(--line-2); }
 .preset.active { border-color: rgba(255, 122, 69, 0.6); background: rgba(255, 122, 69, 0.06); }
 .preset-title { font-weight: 500; }
+.check-box {
+  width: 18px; height: 18px; flex: none; display: grid; place-items: center; border-radius: 5px;
+  border: 1.5px solid var(--line-2); color: #fff;
+  transition: background-color 140ms var(--ease), border-color 140ms var(--ease);
+}
+.check-box.on { background: var(--accent); border-color: var(--accent); }
 .preset-sub { font-size: 12px; line-height: 16px; color: var(--faint); }
 .preset-shape { border: 1.5px solid var(--faint); border-radius: 3px; }
 .preset.active .preset-shape { border-color: var(--accent); }

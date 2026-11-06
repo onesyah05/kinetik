@@ -13,7 +13,8 @@ import {
 import {getServeUrl} from './bundle';
 import {getConfig} from './config';
 import {emit} from './events';
-import {getProject, projectDir, rendersDir} from './projects';
+import {activeVideoId, getProject, projectDir, rendersDir, videosOf} from './projects';
+import type {VideoEntry} from '../kit/settings';
 
 // ---------- Shared headless browser (closed when idle to free RAM) ----------
 
@@ -123,7 +124,14 @@ export type RenderJob = {
   status: 'bundling' | 'rendering' | 'done' | 'error' | 'cancelled';
   progress: number;
   quality: Quality;
+  /** Last finished file (kept for older clients). */
   file?: string;
+  /** Every file this job made, one per video. */
+  files: string[];
+  /** Videos in this job, in render order. */
+  videos: {id: string; name: string}[];
+  /** Index (in videos) of the one rendering now. */
+  current: number;
   error?: string;
   startedAt: number;
   finishedAt?: number;
@@ -145,9 +153,28 @@ const publish = (job: RenderJob) => {
   emit({type: 'render_progress', projectId: job.projectId, job: plain});
 };
 
-export const startRender = (projectId: string, quality: Quality = getConfig().render.quality): RenderJob => {
+/**
+ * Which videos to render: undefined = the active one, 'all' = every video, or a list of ids.
+ * Videos render one after another into separate MP4s, without changing the active video.
+ */
+export type VideoPick = string[] | 'all' | undefined;
+
+const pickVideos = (projectId: string, pick: VideoPick): VideoEntry[] => {
+  const p = getProject(projectId);
+  const all = videosOf(p);
+  if (pick === 'all') return all;
+  const ids = pick?.length ? pick : [activeVideoId(p)];
+  const unknown = ids.filter((id) => !all.some((v) => v.id === id));
+  if (unknown.length) throw new Error(`No video "${unknown.join('", "')}" in this project. Videos: ${all.map((v) => v.id).join(', ')}`);
+  return all.filter((v) => ids.includes(v.id));
+};
+
+export const startRender = (projectId: string, quality: Quality = getConfig().render.quality, pick?: VideoPick): RenderJob => {
   const running = [...jobs.values()].find((j) => j.projectId === projectId && (j.status === 'bundling' || j.status === 'rendering'));
   if (running) throw new Error('A render is already running for this project.');
+  if (!['draft', 'standard', 'high'].includes(quality)) quality = 'standard';
+  const targets = pickVideos(projectId, pick);
+  const multi = videosOf(getProject(projectId)).length > 1;
   const jobId = `${Date.now()}`;
   const {cancelSignal, cancel} = makeCancelSignal();
   const job: RenderJob & {cancel?: () => void} = {
@@ -156,6 +183,9 @@ export const startRender = (projectId: string, quality: Quality = getConfig().re
     status: 'bundling',
     progress: 0,
     quality,
+    files: [],
+    videos: targets.map((v) => ({id: v.id, name: v.name})),
+    current: 0,
     startedAt: Date.now(),
     cancel,
   };
@@ -171,43 +201,47 @@ export const startRender = (projectId: string, quality: Quality = getConfig().re
         job.progress = p / 100;
         publish(job);
       });
-      const inputProps = inputPropsFor(projectId);
-      const composition = await selectComposition({serveUrl, id: 'main', inputProps, puppeteerInstance: b});
       const preset = PRESETS[quality];
-      const proj = getProject(projectId);
-      // With several videos, name the file after the one being rendered.
-      const current = proj.videos && proj.videos.length > 1 ? proj.videos.find((v) => v.id === (proj.activeVideo ?? 'main')) : undefined;
-      const name = (current ? `${proj.name}-${current.name}` : proj.name).replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60) || 'video';
-      const file = `${name}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${quality}.mp4`;
+      const cpus = os.cpus().length;
       fs.mkdirSync(rendersDir(projectId), {recursive: true});
       job.status = 'rendering';
-      job.progress = 0;
-      publish(job);
-      let last = 0;
-      const cpus = os.cpus().length;
-      await renderMedia({
-        composition,
-        serveUrl,
-        codec: 'h264',
-        outputLocation: path.join(rendersDir(projectId), file),
-        inputProps,
-        concurrency: Math.max(1, Math.min(cpus, getConfig().render.concurrency || 2)),
-        scale: preset.scale,
-        crf: preset.crf,
-        x264Preset: preset.x264Preset,
-        puppeteerInstance: b,
-        cancelSignal,
-        onProgress: ({progress}) => {
-          job.progress = progress;
-          if (Date.now() - last > 300) {
-            last = Date.now();
-            publish(job);
-          }
-        },
-      });
+      for (let i = 0; i < targets.length; i++) {
+        const v = targets[i];
+        const proj = getProject(projectId);
+        // Root.tsx renders settings.activeVideo, so each video renders without switching the project.
+        const inputProps = {settings: {...proj, activeVideo: v.id, durationInFrames: v.id === activeVideoId(proj) ? proj.durationInFrames : v.durationInFrames}};
+        const composition = await selectComposition({serveUrl, id: 'main', inputProps, puppeteerInstance: b});
+        const name = (multi ? `${proj.name}-${v.name}` : proj.name).replace(/[^a-zA-Z0-9-_]+/g, '-').slice(0, 60) || 'video';
+        const file = `${name}-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}-${quality}.mp4`;
+        job.current = i;
+        job.progress = i / targets.length;
+        publish(job);
+        let last = 0;
+        await renderMedia({
+          composition,
+          serveUrl,
+          codec: 'h264',
+          outputLocation: path.join(rendersDir(projectId), file),
+          inputProps,
+          concurrency: Math.max(1, Math.min(cpus, getConfig().render.concurrency || 2)),
+          scale: preset.scale,
+          crf: preset.crf,
+          x264Preset: preset.x264Preset,
+          puppeteerInstance: b,
+          cancelSignal,
+          onProgress: ({progress}) => {
+            job.progress = (i + progress) / targets.length;
+            if (Date.now() - last > 300) {
+              last = Date.now();
+              publish(job);
+            }
+          },
+        });
+        job.files.push(file);
+        job.file = file;
+      }
       job.status = 'done';
       job.progress = 1;
-      job.file = file;
     } catch (e: any) {
       const msg = String(e?.message ?? e);
       job.status = /cancel/i.test(msg) ? 'cancelled' : 'error';

@@ -561,14 +561,20 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: 'render_video',
-    description: 'Render the final MP4 locally. Only call this when the user explicitly asks for the final render.',
-    parameters: obj({quality: {type: 'string', enum: ['draft', 'standard', 'high']}}),
-    run: async ({quality}, {projectId, signal}) => {
-      const job = startRender(projectId, quality);
+    description:
+      'Render the final MP4 locally. Only call this when the user explicitly asks for the final render. By default it renders the current video; pass videos: ["all"] for every video of the project, or a list of video ids. Each video becomes its own MP4.',
+    parameters: obj({
+      quality: {type: 'string', enum: ['draft', 'standard', 'high']},
+      videos: {type: 'array', items: {type: 'string'}, description: 'Video ids to render, or ["all"]. Default: the current video.'},
+    }),
+    run: async ({quality, videos}, {projectId, signal}) => {
+      const pick = Array.isArray(videos) && videos.length ? (videos.includes('all') ? 'all' : videos.map(String)) : undefined;
+      const job = startRender(projectId, quality, pick);
       const done = await waitForJob(job.jobId, signal);
-      if (done.status !== 'done') throw new Error(`Render ${done.status}: ${done.error ?? ''}`);
+      const made = (done.files ?? []).map((f) => `renders/${f}`).join(', ');
+      if (done.status !== 'done') throw new Error(`Render ${done.status}: ${done.error ?? ''}${made ? ` (finished before that: ${made})` : ''}`);
       const secs = ((done.finishedAt! - done.startedAt) / 1000).toFixed(1);
-      return {content: `Rendered renders/${done.file} in ${secs}s.`};
+      return {content: `Rendered ${made} in ${secs}s.`};
     },
   },
 ];

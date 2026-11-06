@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.0 — 2026-11-06
+
+### Baru
+- **Pilih video yang dirender**: di tab *Renders*, project dengan beberapa video sekarang menampilkan daftar video. Centang satu, beberapa, atau semua (*Select all*). Setiap video dirender bergantian menjadi MP4 sendiri, lengkap dengan durasi masing-masing.
+- Render tidak lagi mengganti video yang sedang aktif di preview atau chat.
+- Progres menampilkan video ke berapa yang sedang dirender (misal *Rendering 2 of 3*), dan setiap MP4 langsung muncul di daftar begitu selesai.
+- Agent bisa merender semua video sekaligus saat diminta ("render semua videonya").
+
 ## v0.2.0 — 2026-11-06
 
 ### Baru

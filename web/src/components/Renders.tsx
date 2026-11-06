@@ -1,7 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {Clapperboard, Download, Trash2, X} from 'lucide-react';
-import {api, formatBytes, projectUrl, timecode, type Project, type Quality, type RenderFile, type RenderJob} from '../api';
+import React, {useEffect, useRef, useState} from 'react';
+import {Check, Clapperboard, Download, Trash2, X} from 'lucide-react';
+import {api, formatBytes, projectUrl, timecode, type Project, type Quality, type RenderFile, type RenderJob, type VideoEntry} from '../api';
 import type {Bus} from './ProjectView';
+
+const MAIN = 'main';
 
 const QUALITIES: {id: Quality; label: string; sub: string}[] = [
   {id: 'draft', label: 'Draft', sub: 'Half size, fastest'},
@@ -15,6 +17,25 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
   const [quality, setQuality] = useState<Quality>('standard');
   const [error, setError] = useState('');
   const [now, setNow] = useState(Date.now());
+
+  // Videos in this project; the active one stands in with the live duration.
+  const activeId = project.activeVideo ?? MAIN;
+  const videos: VideoEntry[] = (project.videos?.length ? project.videos : [{id: MAIN, name: project.name, durationInFrames: project.durationInFrames}]).map(
+    (v) => (v.id === activeId ? {...v, durationInFrames: project.durationInFrames} : v),
+  );
+  const multi = videos.length > 1;
+  const [picked, setPicked] = useState<string[]>([activeId]);
+  // Drop deleted videos from the selection; fall back to the active one.
+  const chosen = videos.filter((v) => picked.includes(v.id));
+  const selection = chosen.length ? chosen : videos.filter((v) => v.id === activeId);
+  const allPicked = selection.length === videos.length;
+  const toggle = (id: string) =>
+    setPicked((cur) => {
+      const base = cur.filter((x) => videos.some((v) => v.id === x));
+      return base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
+    });
+  const totalFrames = selection.reduce((n, v) => n + v.durationInFrames, 0);
+  const doneCount = useRef(0);
 
   const load = () =>
     api.renders(project.id).then((r) => {
@@ -33,7 +54,10 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
       bus.subscribe((e) => {
         if (e.type !== 'render_progress') return;
         setJob(e.job);
-        if (e.job.status === 'done') load();
+        // Show each finished video as soon as it is written, not only at the end.
+        const n = e.job.files?.length ?? 0;
+        if (e.job.status === 'done' || n !== doneCount.current) load();
+        doneCount.current = n;
       }),
     [bus],
   );
@@ -48,7 +72,8 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
   const start = async () => {
     setError('');
     try {
-      setJob(await api.render(project.id, quality));
+      doneCount.current = 0;
+      setJob(await api.render(project.id, quality, allPicked && multi ? 'all' : selection.map((v) => v.id)));
     } catch (e: any) {
       setError(e.message);
     }
@@ -78,12 +103,40 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
             </div>
           ))}
         </div>
+        {multi && (
+          <div style={{marginBottom: 14}}>
+            <div className="row small" style={{marginBottom: 8}}>
+              <span className="grow faint">Which videos? Each one becomes its own MP4.</span>
+              <button className="btn sm ghost" onClick={() => setPicked(allPicked ? [activeId] : videos.map((v) => v.id))}>
+                {allPicked ? 'Only the current one' : `Select all ${videos.length}`}
+              </button>
+            </div>
+            <div className="presets">
+              {videos.map((v) => {
+                const on = selection.some((x) => x.id === v.id);
+                return (
+                  <div key={v.id} className={`preset ${on ? 'active' : ''}`} onClick={() => toggle(v.id)} role="checkbox" aria-checked={on}>
+                    <span className={`check-box ${on ? 'on' : ''}`}>{on && <Check size={12} strokeWidth={3} />}</span>
+                    <div>
+                      <div className="preset-title">
+                        {v.name}
+                        {v.id === activeId && <span className="faint"> · current</span>}
+                      </div>
+                      <div className="preset-sub mono">{timecode(v.durationInFrames, project.fps)}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="row">
           <button className="btn primary" style={{height: 40, padding: '0 16px'}} onClick={start} disabled={!!active}>
-            <Clapperboard size={16} /> Render MP4
+            <Clapperboard size={16} /> {selection.length > 1 ? `Render ${selection.length} videos` : 'Render MP4'}
           </button>
           <span className="chip">
-            {project.width}×{project.height} · {project.durationInFrames} frames · {timecode(project.durationInFrames, project.fps)}
+            {project.width}×{project.height} · {totalFrames} frames · {timecode(totalFrames, project.fps)}
+            {selection.length > 1 ? ' total' : ''}
           </span>
         </div>
         {error && <div className="error-box" style={{marginTop: 12}}>{error}</div>}
@@ -96,7 +149,10 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
               </span>
               <span className="grow">
                 {job.status === 'bundling' && 'Bundling code'}
-                {job.status === 'rendering' && `Rendering frames · ${Math.round(job.progress * 100)}%`}
+                {job.status === 'rendering' &&
+                  ((job.videos?.length ?? 0) > 1
+                    ? `Rendering ${(job.current ?? 0) + 1} of ${job.videos!.length} · ${job.videos![job.current ?? 0]?.name} · ${Math.round(job.progress * 100)}%`
+                    : `Rendering frames · ${Math.round(job.progress * 100)}%`)}
                 {job.status === 'error' && 'Render failed'}
                 {job.status === 'cancelled' && 'Cancelled'}
                 {job.status === 'done' && 'Done'}

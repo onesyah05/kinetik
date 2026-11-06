@@ -4,7 +4,7 @@
 
 ### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
 
-[![Versi](https://img.shields.io/badge/versi-0.2.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Versi](https://img.shields.io/badge/versi-0.3.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
 [![npm](https://img.shields.io/npm/v/kinetik-studio?style=for-the-badge&color=0b0f1a&label=npm&logo=npm)](https://www.npmjs.com/package/kinetik-studio)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
@@ -128,7 +128,7 @@ Browser otomatis terbuka di **http://localhost:3210**. Selesai! 🎉
 
 <br />
 
-1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.2.0.zip`**, lalu ekstrak.
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.3.0.zip`**, lalu ekstrak.
 2. Klik dua kali **`Start-Kinetik.bat`**. Saat pertama kali, kebutuhannya dipasang otomatis (beberapa menit, sekali saja).
 3. Browser terbuka di **http://localhost:3210**.
 
@@ -177,7 +177,7 @@ Saat dijalankan dari hasil clone, project disimpan di folder `workspace/` di dal
 
 <img src="docs/media/screen-project.jpg" alt="Tampilan project: chat, preview, dan pilihan video" width="100%" />
 
-**6. Render.** Klik tombol oranye **Render**, pilih kualitas, tunggu, lalu unduh MP4-nya dari tab **Renders**.
+**6. Render.** Klik tombol oranye **Render**, pilih kualitas, tunggu, lalu unduh MP4-nya dari tab **Renders**. Kalau project-mu punya beberapa video, centang video mana saja yang mau dirender (atau **Select all**). Setiap video jadi file MP4 sendiri.
 
 **Bonus — bikin seri video:** klik **New video** di atas, tulis beberapa tema (satu per baris), dan agent membuat semuanya dengan gaya yang sama.
 

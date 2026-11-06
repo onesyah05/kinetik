@@ -62,6 +62,9 @@ export type RenderJob = {
   progress: number;
   quality: Quality;
   file?: string;
+  files?: string[];
+  videos?: {id: string; name: string}[];
+  current?: number;
   error?: string;
   startedAt: number;
   finishedAt?: number;
@@ -167,7 +170,8 @@ export const api = {
   },
 
   renders: (id: string) => req<{files: RenderFile[]; jobs: RenderJob[]}>('GET', `${P(id)}/renders`),
-  render: (id: string, quality: Quality) => req<RenderJob>('POST', `${P(id)}/render`, {quality}),
+  render: (id: string, quality: Quality, videos?: string[] | 'all') =>
+    req<RenderJob>('POST', `${P(id)}/render`, {quality, videos}),
   cancelRender: (jobId: string) => req('POST', `/api/renders/${jobId}/cancel`),
   deleteRender: (id: string, file: string) => req('DELETE', `${P(id)}/renders/${encodeURIComponent(file)}`),
 };

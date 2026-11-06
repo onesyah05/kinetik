@@ -240,8 +240,13 @@ app.post(
 app.delete(
   '/api/projects/:id/assets',
   h((req) => {
-    const rel = `public/${safeAssetName(String(req.query.path))}`;
-    fs.rmSync(safeJoin(projectDir(pid(req)), rel), {force: true});
+    const name = safeAssetName(String(req.query.path ?? ''));
+    if (!name) throw new Error('Missing asset path.');
+    const target = safeJoin(projectDir(pid(req)), `public/${name}`);
+    // Whole folders only for one sprite or rig (sprites/<name>, rigs/<name>), never public/ or sprites/ itself.
+    const isDir = fs.existsSync(target) && fs.statSync(target).isDirectory();
+    if (isDir && !/^(sprites|rigs)\/[^/]+$/.test(name)) throw new Error('Only a sprite or rig folder can be deleted as a whole.');
+    fs.rmSync(target, {force: true, recursive: isDir});
     return {ok: true};
   }),
 );

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.1 — 2026-11-07
+
+### Perbaikan
+- Jendela update dan pemberitahuan "Kinetik updated" kini tampil benar: menutupi seluruh halaman dan muncul di pojok kanan bawah, tidak lagi terjepit di bagian header.
+
 ## v0.4.0 — 2026-11-07
 
 ### Baru

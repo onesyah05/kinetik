@@ -4,7 +4,7 @@
 
 ### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
 
-[![Versi](https://img.shields.io/badge/versi-0.4.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Versi](https://img.shields.io/badge/versi-0.4.1-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
 [![npm](https://img.shields.io/npm/v/kinetik-studio?style=for-the-badge&color=0b0f1a&label=npm&logo=npm)](https://www.npmjs.com/package/kinetik-studio)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
@@ -147,7 +147,7 @@ Cara ini berlaku untuk semua cara pasang: npm, ZIP, maupun clone git. Saat Kinet
 
 <br />
 
-1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.4.0.zip`**, lalu ekstrak.
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.4.1.zip`**, lalu ekstrak.
 2. Klik dua kali **`Start-Kinetik.bat`**. Saat pertama kali, kebutuhannya dipasang otomatis (beberapa menit, sekali saja).
 3. Browser terbuka di **http://localhost:3210**.
 

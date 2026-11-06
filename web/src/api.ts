@@ -71,7 +71,7 @@ export type RenderJob = {
 };
 export type RenderFile = {file: string; size: number; createdAt: number};
 
-export type SubAccount = {id: string; kind: 'codex' | 'claude' | 'antigravity'; label: string; expiresAt: number; defaultModel: string};
+export type SubAccount = {id: string; kind: 'codex' | 'claude' | 'antigravity' | 'muse'; label: string; expiresAt: number; defaultModel: string};
 export type LoginStatus =
   | {phase: 'awaiting_user'; message: string; url?: string; userCode?: string}
   | {phase: 'exchanging'; message: string}
@@ -152,7 +152,7 @@ export const api = {
   chat: (id: string, b: {text: string; images?: string[]; providerId?: string; editFrom?: string}) => req('POST', `${P(id)}/chat`, b),
   stop: (id: string) => req('POST', `${P(id)}/stop`),
 
-  // Subscription logins (Codex / Claude Code / Antigravity)
+  // Subscription logins (Codex / Claude Code / Antigravity / Muse Code)
   subscriptions: () => req<{accounts: SubAccount[]; running: string[]}>('GET', '/api/subscriptions'),
   disconnect: (id: string) => req('DELETE', `/api/subscriptions/${encodeURIComponent(id)}`),
   cancelLogin: (kind: string) => req('POST', `/api/subscriptions/${kind}/cancel`),

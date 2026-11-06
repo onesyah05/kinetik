@@ -350,6 +350,142 @@ export const refreshAntigravity = async (
 };
 
 // ---------------------------------------------------------------------------
+// Muse Code (Meta) — RFC 8628 device flow + api-key mint
+// ---------------------------------------------------------------------------
+
+/**
+ * Muse Code lands on Meta's `api.meta.ai/v1` OpenAI-compatible surface behind a
+ * per-subscription minted API key. The device-code login yields an OAuth access
+ * token; a follow-up `POST /muse-code/key` exchanges that for the `api_key` the
+ * model backend accepts as `Authorization: Bearer <apiKey>`.
+ *
+ * The stored access token is the JSON blob `{oauthAccessToken, apiKey}` so the
+ * gateway can unwrap the minted key at dispatch time (same arrangement
+ * Cartethyia's Muse adapter uses). Muse tokens do not expire and Meta rejects
+ * refresh grants, so the OAuth access token is parked in the refresh slot and
+ * re-minting the api_key reuses the existing one.
+ */
+export const MUSE = {
+  clientId: '1031625952748946',
+  deviceAuthorizeUrl: 'https://auth.meta.com/oidc/device/authorization/',
+  deviceTokenUrl: 'https://auth.meta.com/oidc/device/token/',
+  keyUrl: 'https://api.meta.ai/muse-code/key',
+  apiVersion: '1.0.0',
+};
+
+export type MuseDeviceStart = {deviceCode: string; userCode: string; interval: number; verificationUri: string};
+
+export const startMuseDevice = async (): Promise<MuseDeviceStart> => {
+  const res = await fetch(MUSE.deviceAuthorizeUrl, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/x-www-form-urlencoded',
+      'x-api-version': MUSE.apiVersion,
+    },
+    body: form({client_id: MUSE.clientId}),
+  });
+  const body = await readJson(res, 'Muse device authorization');
+  const deviceCode = str(body.device_code);
+  const userCode = str(body.user_code);
+  if (!deviceCode || !userCode) throw new Error('Muse device authorization returned an invalid response');
+  const verificationUri =
+    str(body.verification_uri_complete) ?? str(body.verification_uri) ?? 'https://auth.meta.com/device';
+  return {
+    deviceCode,
+    userCode,
+    interval: typeof body.interval === 'number' ? body.interval : 5,
+    verificationUri,
+  };
+};
+
+/** One poll attempt. Returns null while the user has not approved yet. */
+export const pollMuseDevice = async (deviceCode: string): Promise<{accessToken: string} | null> => {
+  let res: Response;
+  try {
+    res = await fetch(MUSE.deviceTokenUrl, {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-api-version': MUSE.apiVersion,
+      },
+      body: form({
+        client_id: MUSE.clientId,
+        device_code: deviceCode,
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      }),
+    });
+  } catch (e) {
+    throw new Error(`Muse device polling failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+  // 400 authorization_pending / slow_down are the "not approved yet" answers.
+  if (res.status === 400 || res.status === 428) {
+    let err = '';
+    try {
+      err = str(((await res.json()) as Record<string, unknown>).error) ?? '';
+    } catch {
+      /* not json */
+    }
+    if (err === 'slow_down') await sleep(5000);
+    // RFC 8628: the user said no, or the code ran out. Stop instead of polling until the deadline.
+    if (err === 'access_denied') throw new Error('Muse login was declined. Try again and approve it on the Meta page.');
+    if (err === 'expired_token') throw new Error('The Muse login code expired. Start the login again.');
+    return null;
+  }
+  if (!res.ok) return null;
+  const body = await readJson(res, 'Muse device poll');
+  const accessToken = str(body.access_token);
+  if (!accessToken) throw new Error('Muse token response omitted access_token');
+  return {accessToken};
+};
+
+/** Exchange the OAuth access token for the subscription api_key. */
+export const mintMuseKey = async (
+  accessToken: string,
+): Promise<{apiKey: string; label?: string}> => {
+  const res = await fetch(MUSE.keyUrl, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'x-api-version': MUSE.apiVersion,
+      authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({onboard: true}),
+  });
+  const body = await readJson(res, 'Muse key exchange');
+  const apiKey = str(body.api_key);
+  if (!apiKey) throw new Error('Muse key exchange omitted api_key');
+  const label = str(body.user_email);
+  return {apiKey, ...(label ? {label} : {})};
+};
+
+/** Encode the credential blob stored in the access/refresh slots. */
+export const encodeMuseCredential = (oauthAccessToken: string, apiKey: string): string =>
+  JSON.stringify({oauthAccessToken, apiKey});
+
+export const decodeMuseCredential = (blob: string): {oauthAccessToken: string; apiKey: string} => {
+  const parsed = JSON.parse(blob) as Record<string, unknown>;
+  const oauthAccessToken = str(parsed.oauthAccessToken);
+  const apiKey = str(parsed.apiKey);
+  if (!oauthAccessToken || !apiKey) throw new Error('muse: credential is missing oauthAccessToken or apiKey; sign in again');
+  return {oauthAccessToken, apiKey};
+};
+
+/** Re-mint the api_key from the parked OAuth access token (used on refresh). */
+export const refreshMuse = async (
+  oauthAccessToken: string,
+): Promise<{access: string; refresh: string; expiresAt: number}> => {
+  const {apiKey} = await mintMuseKey(oauthAccessToken);
+  return {
+    access: encodeMuseCredential(oauthAccessToken, apiKey),
+    refresh: oauthAccessToken,
+    expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Small helpers
 // ---------------------------------------------------------------------------
 
@@ -370,3 +506,5 @@ const pickRecord = (v: unknown): Record<string, unknown> | undefined =>
 
 const str = (v: unknown): string | undefined =>
   typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined;
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

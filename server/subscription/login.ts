@@ -16,16 +16,20 @@ import {
   buildAntigravityAuthorizeUrl,
   buildClaudeAuthorizeUrl,
   buildPkcePair,
+  encodeMuseCredential,
   exchangeAntigravityCode,
   exchangeClaudeCode,
   exchangeCodexCode,
+  mintMuseKey,
   pollCodexDevice,
+  pollMuseDevice,
   randomState,
   startCodexDevice,
+  startMuseDevice,
 } from './oauth';
 import {accountIdentity, shortHash, upsertAccount} from './store';
 
-export type LoginKind = 'codex' | 'claude' | 'antigravity';
+export type LoginKind = 'codex' | 'claude' | 'antigravity' | 'muse';
 
 /** Progress reported to the UI while a login is in flight. */
 export type LoginStatus =
@@ -85,6 +89,49 @@ async function loginCodex(waiter: Waiter, signal: AbortSignal): Promise<LoginSta
     return {phase: 'done', message: 'Codex connected', accountId: acct.id, label: acct.label};
   }
   return {phase: 'error', message: 'Codex login timed out'};
+}
+
+/**
+ * Muse Code (Meta) device flow. Same shape as Codex: start a device login, hand
+ * the user a URL + code, poll until approved, then mint the subscription api_key
+ * the model backend accepts. The stored access token is the
+ * `{oauthAccessToken, apiKey}` blob; the OAuth access token is parked in the
+ * refresh slot so a re-mint can reuse it (Muse tokens do not expire).
+ */
+async function loginMuse(waiter: Waiter, signal: AbortSignal): Promise<LoginStatus> {
+  const started = await startMuseDevice();
+  emit('muse', {
+    phase: 'awaiting_user',
+    message: `Open ${started.verificationUri} and enter code ${started.userCode}`,
+    url: started.verificationUri,
+    userCode: started.userCode,
+  });
+  const deadline = Date.now() + 900_000;
+  while (Date.now() < deadline) {
+    if (signal.aborted) return {phase: 'error', message: 'Login cancelled'};
+    await sleep(started.interval * 1000);
+    if (signal.aborted) return {phase: 'error', message: 'Login cancelled'};
+    let auth: {accessToken: string} | null;
+    try {
+      auth = await pollMuseDevice(started.deviceCode);
+    } catch (e) {
+      return {phase: 'error', message: e instanceof Error ? e.message : String(e)};
+    }
+    if (!auth) continue;
+    emit('muse', {phase: 'exchanging', message: 'Minting your Muse Code key…'});
+    const {apiKey, label} = await mintMuseKey(auth.accessToken);
+    const identity = accountIdentity('muse', label ?? '', shortHash(apiKey));
+    const acct = upsertAccount({
+      identity,
+      kind: 'muse',
+      label: label ?? 'Muse Code account',
+      accessToken: encodeMuseCredential(auth.accessToken, apiKey),
+      refreshToken: auth.accessToken,
+      expiresAt: Date.now() + 365 * 24 * 60 * 60 * 1000,
+    });
+    return {phase: 'done', message: 'Muse Code connected', accountId: acct.id, label: acct.label};
+  }
+  return {phase: 'error', message: 'Muse login timed out'};
 }
 
 /**
@@ -190,7 +237,12 @@ export const startLogin = (kind: LoginKind, onStatus: Waiter): void => {
   cancelLogin(kind);
   const abort = new AbortController();
   active.set(kind, {abort, waiter: onStatus});
-  const run = kind === 'codex' ? loginCodex(onStatus, abort.signal) : loginBrowser(kind, onStatus, abort.signal);
+  const run =
+    kind === 'codex'
+      ? loginCodex(onStatus, abort.signal)
+      : kind === 'muse'
+        ? loginMuse(onStatus, abort.signal)
+        : loginBrowser(kind, onStatus, abort.signal);
   run
     .then((status) => {
       onStatus(status);

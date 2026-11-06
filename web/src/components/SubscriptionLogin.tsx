@@ -2,12 +2,13 @@ import React, {useEffect, useState} from 'react';
 import {KeyRound, LogOut, X, ExternalLink, Check} from 'lucide-react';
 import {api, type LoginStatus, type SubAccount} from '../api';
 
-type Kind = 'codex' | 'claude' | 'antigravity';
+type Kind = 'codex' | 'claude' | 'antigravity' | 'muse';
 
 const PROVIDERS: {kind: Kind; name: string; blurb: string; color: string}[] = [
   {kind: 'codex', name: 'Codex', blurb: 'ChatGPT Plus/Pro — GPT-6', color: '#10a37f'},
   {kind: 'claude', name: 'Claude Code', blurb: 'Claude Pro/Max', color: '#d97757'},
   {kind: 'antigravity', name: 'Antigravity', blurb: 'Google — Gemini 3', color: '#4285f4'},
+  {kind: 'muse', name: 'Muse Code', blurb: 'Meta — Muse Spark', color: '#0064e0'},
 ];
 
 /**
@@ -73,7 +74,7 @@ const SubscriptionLogin: React.FC<{onChange: () => void}> = ({onChange}) => {
       <div className="sublogin-head">
         <KeyRound size={16} />
         <strong>Sign in with subscription</strong>
-        <span className="sublogin-sub">Use your ChatGPT, Claude, or Google plan — no API key needed.</span>
+        <span className="sublogin-sub">Use your ChatGPT, Claude, Google, or Meta plan — no API key needed.</span>
       </div>
       <div className="sublogin-grid">
         {PROVIDERS.map(({kind, name, blurb, color}) => {

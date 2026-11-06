@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5.0 — 2026-11-07
+
+### Baru
+- **Login Muse Code (Meta)**: di **Settings → Sign in with subscription** sekarang ada **Muse Code**. Buka link yang muncul, masukkan kodenya, setujui, dan selesai. Model Muse Spark (`muse-spark-1.3`, `1.2`, `1.1`) langsung bisa dipilih di chat.
+- Kalau project memakai Muse, pembuatan gambar otomatis memakai akun Codex atau Antigravity yang terhubung.
+
+### Perbaikan
+- Render berhenti dengan pesan "restart Kinetik" kalau server masih menjalankan kode lama yang mengabaikan pilihan video, bukan merender video yang salah.
+
 ## v0.4.1 — 2026-11-07
 
 ### Perbaikan

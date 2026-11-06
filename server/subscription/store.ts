@@ -15,8 +15,8 @@ import {DATA} from '../paths';
 export type SubscriptionAccount = {
   /** Stable id: `<providerKind>:<label or hash>`. Re-login to the same account overwrites it. */
   id: string;
-  /** `codex` | `claude` | `antigravity`. */
-  kind: 'codex' | 'claude' | 'antigravity';
+  /** `codex` | `claude` | `antigravity` | `muse`. */
+  kind: 'codex' | 'claude' | 'antigravity' | 'muse';
   label: string;
   /** Encrypted at rest; decrypted only in memory when a model call needs it. */
   accessToken: string;

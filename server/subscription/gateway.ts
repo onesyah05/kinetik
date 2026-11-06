@@ -12,7 +12,7 @@
  * down to what a video agent needs: text, vision (image_url), and tool calling.
  */
 import {getAccount, readAccessToken, readRefreshToken, updateAuthState, updateTokens, type SubscriptionAccount} from './store';
-import {refreshAntigravity, refreshClaude, refreshCodex} from './oauth';
+import {decodeMuseCredential, refreshAntigravity, refreshClaude, refreshCodex, refreshMuse} from './oauth';
 
 // A minimal OpenAI chat.completions request as sent by the agent.
 export type ChatMessage = {
@@ -62,7 +62,14 @@ const freshToken = async (a: SubscriptionAccount): Promise<string> => {
   if (a.expiresAt - margin > Date.now()) return readAccessToken(a);
   const refresh = readRefreshToken(a);
   if (!refresh) throw new Error(`${a.label}: access token expired and no refresh token stored`);
-  const refresher = a.kind === 'codex' ? refreshCodex : a.kind === 'claude' ? refreshClaude : refreshAntigravity;
+  const refresher =
+    a.kind === 'codex'
+      ? refreshCodex
+      : a.kind === 'claude'
+        ? refreshClaude
+        : a.kind === 'muse'
+          ? refreshMuse
+          : refreshAntigravity;
   const t = await refresher(refresh);
   updateTokens(a.id, {accessToken: t.access, refreshToken: t.refresh, expiresAt: t.expiresAt});
   return t.access;
@@ -481,10 +488,48 @@ async function* streamCodex(
   });
   if (!res.ok || !res.body) throw new Error(`Codex error ${res.status}: ${(await res.text()).slice(0, 300)}`);
 
+  yield* consumeResponsesSSE(res.body, 'Codex');
+}
+
+/**
+ * Muse Code (Meta) — OpenAI Responses wire at `api.meta.ai/v1`, authenticated
+ * with the per-subscription api_key minted at login (unwrapped from the stored
+ * credential blob). Same event stream as Codex, so it shares the parser.
+ */
+const MUSE_RESPONSES_URL = 'https://api.meta.ai/v1/responses';
+
+async function* streamMuse(
+  acct: SubscriptionAccount,
+  req: ChatRequest,
+  signal: AbortSignal,
+): AsyncGenerator<OutDelta> {
+  const blob = await freshToken(acct);
+  const {apiKey} = decodeMuseCredential(blob);
+  const payload = toResponsesPayload(req);
+  const res = await fetch(MUSE_RESPONSES_URL, {
+    method: 'POST',
+    signal,
+    headers: {
+      'content-type': 'application/json',
+      accept: 'text/event-stream',
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok || !res.body) throw new Error(`Muse error ${res.status}: ${(await res.text()).slice(0, 300)}`);
+
+  yield* consumeResponsesSSE(res.body, 'Muse');
+}
+
+/** Translate an OpenAI Responses SSE stream into normalized output deltas. */
+async function* consumeResponsesSSE(
+  body: ReadableStream<Uint8Array>,
+  label: string,
+): AsyncGenerator<OutDelta> {
   let toolIndex = 0;
   const toolCallIds = new Map<number, string>();
   const calls = new Map<string, {index: number; sent: string}>();
-  for await (const data of sseEvents(res.body)) {
+  for await (const data of sseEvents(body)) {
     if (!data || data === '[DONE]') continue;
     let ev: any;
     try {
@@ -526,11 +571,11 @@ async function* streamCodex(
     } else if (type === 'response.completed' || type === 'response.failed') {
       const resp = ev.response ?? {};
       const status = resp.status;
-      if (status === 'failed') throw new Error(`Codex response failed: ${JSON.stringify(resp.error ?? resp)}`);
+      if (status === 'failed') throw new Error(`${label} response failed: ${JSON.stringify(resp.error ?? resp)}`);
       const incomplete = resp.incomplete_details?.reason === 'max_output_tokens';
       yield {finish_reason: incomplete ? 'length' : toolIndex > 0 ? 'tool_calls' : 'stop'};
     } else if (type === 'error') {
-      throw new Error(`Codex stream error: ${JSON.stringify(ev)}`);
+      throw new Error(`${label} stream error: ${JSON.stringify(ev)}`);
     }
   }
 }
@@ -809,7 +854,14 @@ export async function* streamSubscription(
   signal: AbortSignal,
 ): AsyncGenerator<OutDelta> {
   const acct = accountFromKey(accountKey);
-  const gen = acct.kind === 'codex' ? streamCodex : acct.kind === 'claude' ? streamClaude : streamAntigravity;
+  const gen =
+    acct.kind === 'codex'
+      ? streamCodex
+      : acct.kind === 'claude'
+        ? streamClaude
+        : acct.kind === 'muse'
+          ? streamMuse
+          : streamAntigravity;
   yield* gen(acct, req, signal);
 }
 
@@ -825,6 +877,7 @@ export async function listSubscriptionModels(accountKey: string): Promise<string
     }
     return CODEX_FALLBACK_MODELS;
   }
+  if (acct.kind === 'muse') return MUSE_MODELS;
   if (acct.kind === 'antigravity') {
     try {
       const live = await listAntigravityModels(acct);
@@ -844,5 +897,9 @@ export const DEFAULT_MODELS: Record<LoginKindAlias, string> = {
   codex: 'gpt-6-sol',
   claude: 'claude-sonnet-4-5',
   antigravity: 'gemini-3-flash',
+  muse: 'muse-spark-1.3',
 };
-type LoginKindAlias = 'codex' | 'claude' | 'antigravity';
+type LoginKindAlias = 'codex' | 'claude' | 'antigravity' | 'muse';
+
+/** Models a Muse Code account can use. */
+const MUSE_MODELS = ['muse-spark-1.3', 'muse-spark-1.2', 'muse-spark-1.1'];

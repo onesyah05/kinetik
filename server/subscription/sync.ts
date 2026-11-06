@@ -24,6 +24,7 @@ const KIND_LABEL: Record<string, string> = {
   codex: 'Codex',
   claude: 'Claude Code',
   antigravity: 'Antigravity',
+  muse: 'Muse Code',
 };
 
 /**

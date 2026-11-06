@@ -16,7 +16,7 @@ import {syncSubscriptionProviders} from './sync';
 
 export const subscriptionRouter = express.Router();
 
-const KINDS: LoginKind[] = ['codex', 'claude', 'antigravity'];
+const KINDS: LoginKind[] = ['codex', 'claude', 'antigravity', 'muse'];
 
 const publicAccount = (a: SubscriptionAccount) => ({
   id: a.id,

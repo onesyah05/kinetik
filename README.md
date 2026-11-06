@@ -4,7 +4,7 @@
 
 ### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
 
-[![Versi](https://img.shields.io/badge/versi-0.5.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Versi](https://img.shields.io/badge/versi-0.6.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
 [![npm](https://img.shields.io/npm/v/kinetik-studio?style=for-the-badge&color=0b0f1a&label=npm&logo=npm)](https://www.npmjs.com/package/kinetik-studio)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
@@ -75,6 +75,7 @@ Semua video di bawah ini dibuat **sepenuhnya oleh agent Kinetik** dari satu kali
 | ✏️ | **Edit & kirim ulang** | Salah ketik? Edit pesanmu atau kirim ulang, agent mengulang dari titik itu. |
 | 👁️ | **Preview langsung** | Setiap perubahan kode langsung terlihat di preview, tanpa menunggu render. |
 | 💻 | **Render di laptop sendiri** | Hasil akhir MP4 dirender lokal. Gratis, privat, dan bisa offline setelah aset siap. |
+| 📲 | **Langsung posting ke Facebook Reels** | Satu klik dari hasil render. Caption dan hashtag yang sedang tren (huruf kecil semua) ditulis AI dan bisa kamu edit dulu. |
 
 ---
 
@@ -147,7 +148,7 @@ Cara ini berlaku untuk semua cara pasang: npm, ZIP, maupun clone git. Saat Kinet
 
 <br />
 
-1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.5.0.zip`**, lalu ekstrak.
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.6.0.zip`**, lalu ekstrak.
 2. Klik dua kali **`Start-Kinetik.bat`**. Saat pertama kali, kebutuhannya dipasang otomatis (beberapa menit, sekali saja).
 3. Browser terbuka di **http://localhost:3210**.
 
@@ -198,7 +199,24 @@ Saat dijalankan dari hasil clone, project disimpan di folder `workspace/` di dal
 
 **6. Render.** Klik tombol oranye **Render**, pilih kualitas, tunggu, lalu unduh MP4-nya dari tab **Renders**. Kalau project-mu punya beberapa video, centang video mana saja yang mau dirender (atau **Select all**). Setiap video jadi file MP4 sendiri.
 
+**7. Posting ke Facebook Reels (opsional).** Di setiap hasil render ada tombol **Post to Reels**. AI menulis caption dari narasi videonya, plus hashtag huruf kecil yang sedang ramai. Kamu bisa mengedit keduanya, menambah hashtag dari daftar tren Google, lalu klik **Post Reel**, atau simpan sebagai draft.
+
 **Bonus — bikin seri video:** klik **New video** di atas, tulis beberapa tema (satu per baris), dan agent membuat semuanya dengan gaya yang sama.
+
+<details>
+<summary><b>Cara menyiapkan posting ke Facebook Reels</b></summary>
+
+<br />
+
+1. Buka [Meta for Developers](https://developers.facebook.com/apps/), buat aplikasi (tipe **Business**), lalu tambahkan produk **Facebook Login for Business**.
+2. Buka [Graph API Explorer](https://developers.facebook.com/tools/explorer/). Pilih aplikasimu, lalu centang izin **`pages_show_list`**, **`pages_read_engagement`**, dan **`pages_manage_posts`**. Klik **Generate Access Token**.
+3. Di menu **User or Page**, pilih Halaman Facebook-mu. Token yang muncul adalah **Page access token**. Supaya tidak cepat kedaluwarsa, perpanjang dulu lewat [Access Token Debugger](https://developers.facebook.com/tools/debug/accesstoken/) → **Extend Access Token**, lalu pilih Halamanmu lagi di Explorer.
+4. **Page ID** ada di Halamanmu → **Tentang** → **Transparansi Halaman**.
+5. Di Kinetik: ⚙️ **Settings** → **Facebook Reels**, isi keduanya, klik **Test connection**, lalu **Save**.
+
+Syarat video dari Facebook: **9:16** (pilih format Reels/TikTok saat membuat project), durasi **3–90 detik**, minimal **540×960**. Kinetik mengeceknya sebelum mengunggah. Batasnya **30 Reels per Halaman setiap 24 jam** lewat API.
+
+</details>
 
 ---
 

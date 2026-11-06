@@ -34,6 +34,7 @@ import {savePublic} from './media';
 import {checkProject} from './check';
 import {anyRenderActive, cancelRender, closeBrowser, listJobs, startRender, warmupBrowser} from './render';
 import {checkForUpdate, requestUpdate, versionInfo} from './update';
+import {checkReel, draftCaption, publishReel, readRenderMeta, reelPostState, testFacebook, trendingTopics} from './facebook';
 import {listVoices, synthesizeTest} from './tts';
 import {dropBundle} from './bundle';
 import {anyAgentRunning, clearHistory, isRunning, loadHistory, runAgent, stopAgent} from './agent/agent';
@@ -86,6 +87,7 @@ const publicConfig = (c: Config) => ({
   imageGen: {...c.imageGen, apiKey: maskKey(c.imageGen.apiKey)},
   stock: {pexelsKey: maskKey(c.stock.pexelsKey), unsplashKey: maskKey(c.stock.unsplashKey)},
   tts: {...c.tts, geminiKey: maskKey(c.tts.geminiKey)},
+  facebook: c.facebook ? {...c.facebook, pageToken: maskKey(c.facebook.pageToken)} : undefined,
 });
 
 // ---------- Version and updates ----------
@@ -121,6 +123,7 @@ app.put(
     next.stock.pexelsKey = keep(next.stock.pexelsKey, cur.stock.pexelsKey);
     next.stock.unsplashKey = keep(next.stock.unsplashKey, cur.stock.unsplashKey);
     next.tts.geminiKey = keep(next.tts.geminiKey ?? '', cur.tts.geminiKey);
+    if (next.facebook) next.facebook.pageToken = keep(next.facebook.pageToken ?? '', cur.facebook?.pageToken ?? '');
     saveConfig(next);
     syncSubscriptionProviders();
     return publicConfig(getConfig());
@@ -270,13 +273,33 @@ app.post(
 app.post('/api/projects/:id/stop', h((req) => (stopAgent(pid(req)), {ok: true})));
 
 // Renders
-app.get('/api/projects/:id/renders', h((req) => ({files: listRenders(pid(req)), jobs: listJobs(pid(req))})));
+app.get(
+  '/api/projects/:id/renders',
+  h((req) => ({
+    files: listRenders(pid(req)).map((f) => {
+      const meta = readRenderMeta(pid(req), f.file);
+      return {...f, videoName: meta.videoName, facebook: reelPostState(pid(req), f.file)};
+    }),
+    jobs: listJobs(pid(req)),
+  })),
+);
+
+// ---------- Facebook Reels ----------
+app.post('/api/facebook/test', h((req) => testFacebook(req.body?.pageId, MASK.test(req.body?.pageToken ?? '') ? undefined : req.body?.pageToken)));
+app.get('/api/facebook/trends', h(async (req) => ({topics: await trendingTopics(String(req.query.region || getConfig().facebook?.trendRegion || 'ID'))})));
+app.get('/api/projects/:id/renders/:file/reel', h((req) => checkReel(pid(req), String(req.params.file))));
+app.post('/api/projects/:id/renders/:file/caption', h((req) => draftCaption(pid(req), String(req.params.file))));
+app.post(
+  '/api/projects/:id/renders/:file/reel',
+  h((req) => publishReel(pid(req), String(req.params.file), req.body ?? {})),
+);
 app.post('/api/projects/:id/render', h((req) => startRender(pid(req), req.body?.quality, req.body?.videos)));
 app.post('/api/renders/:jobId/cancel', h((req) => (cancelRender(String(req.params.jobId)), {ok: true})));
 app.delete(
   '/api/projects/:id/renders/:file',
   h((req) => {
     fs.rmSync(safeJoin(rendersDir(pid(req)), String(req.params.file)), {force: true});
+    fs.rmSync(`${safeJoin(rendersDir(pid(req)), String(req.params.file))}.json`, {force: true});
     return {ok: true};
   }),
 );

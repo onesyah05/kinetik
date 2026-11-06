@@ -35,6 +35,8 @@ export type Config = {
   agent: {maxSteps: number; snapshotMaxSide: number};
   /** Part detection for rig_character fallback: a vision model on one of the LLM providers. */
   rig?: {providerId?: string; model?: string};
+  /** Posting renders to a Facebook Page as Reels. trendRegion: Google Trends country for hashtag hints. */
+  facebook?: {pageId: string; pageToken: string; trendRegion?: string; aiLabel?: boolean};
 };
 
 const FILE = path.join(DATA, 'config.json');

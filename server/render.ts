@@ -15,6 +15,7 @@ import {getConfig} from './config';
 import {emit} from './events';
 import {activeVideoId, getProject, projectDir, rendersDir, videosOf} from './projects';
 import type {VideoEntry} from '../kit/settings';
+import {writeRenderMeta} from './facebook';
 
 // ---------- Shared headless browser (closed when idle to free RAM) ----------
 
@@ -246,6 +247,16 @@ export const startRender = (projectId: string, quality: Quality = getConfig().re
               publish(job);
             }
           },
+        });
+        // Remember which video this file is, for posting it later.
+        writeRenderMeta(projectId, file, {
+          videoId: v.id,
+          videoName: v.name,
+          width: Math.round(composition.width * preset.scale),
+          height: Math.round(composition.height * preset.scale),
+          fps: composition.fps,
+          durationInFrames: composition.durationInFrames,
+          quality,
         });
         job.files.push(file);
         job.file = file;

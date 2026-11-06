@@ -1,7 +1,19 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Check, Clapperboard, Download, Trash2, X} from 'lucide-react';
-import {api, formatBytes, projectUrl, timecode, type Project, type Quality, type RenderFile, type RenderJob, type VideoEntry} from '../api';
+import {Check, Clapperboard, Download, ExternalLink, Send, Trash2, X} from 'lucide-react';
+import {
+  api,
+  formatBytes,
+  projectUrl,
+  timecode,
+  type Project,
+  type Quality,
+  type ReelPost,
+  type RenderFile,
+  type RenderJob,
+  type VideoEntry,
+} from '../api';
 import type {Bus} from './ProjectView';
+import {ReelPostDialog} from './ReelPostDialog';
 
 const MAIN = 'main';
 
@@ -11,8 +23,10 @@ const QUALITIES: {id: Quality; label: string; sub: string}[] = [
   {id: 'high', label: 'High', sub: 'Full size, slowest'},
 ];
 
-export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) => {
+export const Renders: React.FC<{project: Project; bus: Bus; onOpenSettings?: () => void}> = ({project, bus, onOpenSettings}) => {
   const [files, setFiles] = useState<RenderFile[]>([]);
+  const [posting, setPosting] = useState<RenderFile | null>(null);
+  const reelBusy = (f: RenderFile) => !!f.facebook && !['done', 'error'].includes(f.facebook.status);
   const [job, setJob] = useState<RenderJob | null>(null);
   const [quality, setQuality] = useState<Quality>('standard');
   const [error, setError] = useState('');
@@ -52,6 +66,8 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
   useEffect(
     () =>
       bus.subscribe((e) => {
+        // A Reel finished or failed: refresh the "posted" badges.
+        if (e.type === 'fb_progress' && ['done', 'error'].includes((e.post as ReelPost).status)) load();
         if (e.type !== 'render_progress') return;
         setJob(e.job);
         // Show each finished video as soon as it is written, not only at the end.
@@ -200,10 +216,20 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
                 <div className="small faint mono" style={{marginTop: 4}}>
                   {formatBytes(f.size)} · {new Date(f.createdAt).toLocaleString()}
                 </div>
+                {f.facebook?.status === 'done' && f.facebook.url && (
+                  <a className="reel-posted" href={f.facebook.url} target="_blank" rel="noreferrer" style={{marginTop: 8}}>
+                    <Check size={14} /> {f.facebook.state === 'DRAFT' ? 'Draft on Facebook' : 'Posted to Facebook Reels'}
+                    {f.facebook.postedAt ? ` · ${new Date(f.facebook.postedAt).toLocaleDateString()}` : ''}
+                    <ExternalLink size={12} />
+                  </a>
+                )}
                 <div className="row" style={{marginTop: 12}}>
                   <a className="btn sm" href={url} download={f.file}>
                     <Download size={16} /> Download
                   </a>
+                  <button className="btn sm" onClick={() => setPosting(f)} title="Post this video to your Facebook Page as a Reel">
+                    <Send size={16} /> {reelBusy(f) ? 'Posting…' : 'Post to Reels'}
+                  </button>
                   <button className="btn sm ghost danger" onClick={() => remove(f)}>
                     <Trash2 size={16} />
                   </button>
@@ -213,6 +239,18 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
           );
         })}
         <div className="hint mono">workspace/{project.id}/renders/</div>
+        {posting && (
+          <ReelPostDialog
+            projectId={project.id}
+            file={files.find((f) => f.file === posting.file) ?? posting}
+            bus={bus}
+            onOpenSettings={onOpenSettings}
+            onClose={() => {
+              setPosting(null);
+              load();
+            }}
+          />
+        )}
       </div>
     </div>
   );

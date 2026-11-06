@@ -169,7 +169,7 @@ export const ProjectView: React.FC<{id: string; onOpenSettings: () => void}> = (
             </div>
             {tab === 'code' && <CodeEditor projectId={id} version={codeVersion} />}
             {tab === 'assets' && <Assets projectId={id} version={assetsVersion} />}
-            {tab === 'renders' && <Renders project={project} bus={bus} />}
+            {tab === 'renders' && <Renders project={project} bus={bus} onOpenSettings={onOpenSettings} />}
             {tab === 'settings' && <ProjectSettingsPanel project={project} onChange={setProject} />}
           </div>
         </main>

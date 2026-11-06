@@ -1,0 +1,226 @@
+<div align="center">
+
+<img src="docs/media/banner.jpg" alt="Kinetik — AI video agent" width="100%" />
+
+### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
+
+[![Versi](https://img.shields.io/badge/versi-0.1.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
+[![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
+[![Platform](https://img.shields.io/badge/Windows%20·%20macOS%20·%20Linux-0b0f1a?style=for-the-badge)](#-mulai-dalam-5-menit)
+
+[**Lihat contoh**](#-contoh-video) · [**Mulai sekarang**](#-mulai-dalam-5-menit) · [**Cara pakai**](#-cara-pakai) · [**Unduh rilis**](https://github.com/onesyah05/kinetik/releases/latest)
+
+</div>
+
+---
+
+## ✦ Apa itu Kinetik?
+
+**Kinetik** adalah studio video bertenaga AI yang berjalan di komputermu sendiri. Kamu cukup mengetik ide seperti
+*"buat video 30 detik tentang kenapa hujan turun, gaya kartun, suara perempuan"*, lalu agent AI akan:
+
+1. 🎨 menawarkan **3 pilihan gaya visual** (dibuat dengan AI) untuk kamu pilih,
+2. ✍️ menulis setiap adegan, teks, dan animasinya,
+3. 🗣️ membuat **suara narasi + subtitle** yang sinkron per kata,
+4. 🖼️ menggambar **karakter dan ilustrasi** sendiri, lengkap dengan animasinya,
+5. 👀 **mengecek hasilnya sendiri** (teks terpotong, warna bertabrakan) lalu memperbaikinya,
+6. 🎬 merender **file MP4** siap upload ke TikTok, Reels, Shorts, atau YouTube.
+
+Tanpa aplikasi edit video, tanpa timeline, tanpa biaya render di cloud.
+
+---
+
+## 🎞 Contoh video
+
+Semua video di bawah ini dibuat **sepenuhnya oleh agent Kinetik** dari satu kalimat permintaan. Klik untuk menonton versi MP4 lengkapnya.
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <a href="https://github.com/onesyah05/kinetik/releases/download/v0.1.0/contoh-film-dibuat.mp4"><img src="docs/media/demo-film.gif" width="200" alt="Bagaimana Film Dibuat" /></a>
+      <br /><b>Bagaimana Film Dibuat?</b><br /><sub>Dokumenter gelap · 32 dtk</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/onesyah05/kinetik/releases/download/v0.1.0/contoh-umr-vs-sembako.mp4"><img src="docs/media/demo-umr.gif" width="200" alt="UMR vs Harga Sembako" /></a>
+      <br /><b>UMR vs Harga Sembako</b><br /><sub>Konten opini + maskot AI · 43 dtk</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/onesyah05/kinetik/releases/download/v0.1.0/contoh-laut-jadi-hujan.mp4"><img src="docs/media/demo-hujan.gif" width="200" alt="Dari Laut Jadi Hujan" /></a>
+      <br /><b>Dari Laut Jadi Hujan</b><br /><sub>Edukasi sains · 45 dtk</sub>
+    </td>
+    <td align="center" width="25%">
+      <a href="https://github.com/onesyah05/kinetik/releases/download/v0.1.0/contoh-nasi-goreng.mp4"><img src="docs/media/demo-nasgor.gif" width="200" alt="Nasi Goreng Bareng Si Meng" /></a>
+      <br /><b>Nasi Goreng Bareng Si Meng</b><br /><sub>Resep + karakter kucing · 23 dtk</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>Pratinjau di atas dipercepat 3×. Video aslinya 1080×1920 dengan suara narasi dan subtitle.</sub>
+
+---
+
+## ⚡ Fitur unggulan
+
+| | Fitur | Penjelasan singkat |
+|---|---|---|
+| 💬 | **Cukup ngobrol** | Jelaskan videonya pakai bahasa sehari-hari. Agent membalas dalam bahasamu. |
+| 🎨 | **Pilih gaya dari gambar AI** | Untuk video baru, agent membuat 3 gambar contoh gaya sekaligus. Pilih satu, semua adegan dan aset mengikuti gaya itu. |
+| 🔑 | **Login pakai langganan** | Masuk dengan akun **ChatGPT (Codex)**, **Claude**, atau **Google (Antigravity)**. Tidak perlu API key. |
+| 🔁 | **Semua ikut model pilihanmu** | Ganti model di project, maka pembuatan gambar, animasi karakter, dan pengecekan ikut pindah otomatis. |
+| 🖼️ | **Gambar & karakter AI** | Ilustrasi dengan latar transparan otomatis, karakter yang konsisten di banyak pose, dan animasi frame-by-frame. |
+| 🗣️ | **Suara + subtitle gratis** | Narasi Edge TTS (Indonesia & banyak bahasa) dengan subtitle per kata. Bisa dimatikan atau diganti gayanya. |
+| 📚 | **Banyak video, satu gaya** | Tulis beberapa tema sekaligus, satu baris satu video. Semuanya memakai gaya, suara, dan aset yang sama. |
+| ✏️ | **Edit & kirim ulang** | Salah ketik? Edit pesanmu atau kirim ulang, agent mengulang dari titik itu. |
+| 👁️ | **Preview langsung** | Setiap perubahan kode langsung terlihat di preview, tanpa menunggu render. |
+| 💻 | **Render di laptop sendiri** | Hasil akhir MP4 dirender lokal. Gratis, privat, dan bisa offline setelah aset siap. |
+
+---
+
+## 🚀 Mulai dalam 5 menit
+
+### Yang perlu dipasang dulu (sekali saja)
+
+| Program | Untuk apa | Cara pasang |
+|---|---|---|
+| **Node.js 20+** | Menjalankan Kinetik | Unduh versi **LTS** di [nodejs.org](https://nodejs.org) |
+| **FFmpeg** | Membuat file MP4 | Windows: buka *Terminal*, ketik `winget install Gyan.FFmpeg` |
+| **Python 3** | Suara narasi & latar transparan | [python.org](https://www.python.org/downloads/) — centang **"Add python.exe to PATH"** |
+
+> 💡 Tidak yakin sudah terpasang? Lewati saja. Peluncur Kinetik akan memberi tahu apa yang masih kurang.
+
+### Windows — cara paling mudah
+
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.1.0.zip`**, lalu ekstrak.
+2. Klik dua kali **`Start-Kinetik.bat`**.
+3. Tunggu sebentar. Saat pertama kali, Kinetik memasang semua kebutuhannya (beberapa menit, sekali saja).
+4. Browser akan terbuka di **http://localhost:3210**. Selesai! 🎉
+
+> Biarkan jendela hitam (terminal) tetap terbuka selama memakai Kinetik. Tutup jendela itu untuk mematikannya.
+
+### macOS / Linux / cara manual
+
+```bash
+git clone https://github.com/onesyah05/kinetik.git
+cd kinetik
+npm install
+pip install -r requirements.txt
+npm start
+```
+
+Lalu buka **http://localhost:3210** di browser.
+
+---
+
+## 🧭 Cara pakai
+
+<img src="docs/media/screen-home.jpg" alt="Halaman utama Kinetik" width="100%" />
+
+**1. Hubungkan AI.** Klik ikon ⚙️ **Settings** → **Sign in with subscription**, lalu login dengan akun ChatGPT, Claude, atau Google yang kamu punya. Atau isi API key dari OpenAI, OpenRouter, Gemini, dan lainnya.
+
+<p align="center"><img src="docs/media/screen-login.jpg" alt="Login dengan langganan" width="70%" /></p>
+
+**2. Buat project.** Isi judul, pilih format (**9:16** untuk TikTok/Reels, **16:9** untuk YouTube), lalu klik **Create project**.
+
+**3. Ceritakan videonya di chat.** Contoh:
+
+> *Buat video 30 detik tentang kenapa kucing suka kotak. Gaya kartun lucu, suara perempuan ceria, ada maskot kucing oranye.*
+
+**4. Pilih gaya.** Agent menampilkan 3 gambar contoh gaya. Klik **Use this style** pada yang kamu suka. Mau versi lain? Klik **Regenerate**.
+
+**5. Tonton & revisi.** Preview langsung muncul di kanan. Minta perubahan lewat chat, misalnya *"judulnya lebih besar"* atau *"ganti warnanya jadi biru"*.
+
+<img src="docs/media/screen-project.jpg" alt="Tampilan project: chat, preview, dan pilihan video" width="100%" />
+
+**6. Render.** Klik tombol oranye **Render**, pilih kualitas, tunggu, lalu unduh MP4-nya dari tab **Renders**.
+
+**Bonus — bikin seri video:** klik **New video** di atas, tulis beberapa tema (satu per baris), dan agent membuat semuanya dengan gaya yang sama.
+
+---
+
+## 🧠 Cara kerjanya
+
+```mermaid
+flowchart LR
+    A["💬 Kamu<br/>ngobrol di chat"] --> B["🤖 Agent AI<br/>Codex · Claude · Gemini · dll"]
+    B -->|menulis kode| C["⚛️ Adegan Remotion<br/>React + animasi"]
+    B -->|membuat| D["🖼️ Gambar & karakter AI<br/>🗣️ Suara + subtitle"]
+    C --> E["👁️ Preview langsung<br/>di browser"]
+    D --> C
+    E -->|snapshot dicek AI| B
+    C --> F["🎬 Render lokal<br/>Chrome + FFmpeg → MP4"]
+```
+
+Video di Kinetik adalah **kode React** (memakai [Remotion](https://www.remotion.dev)). Karena itu hasilnya tajam di resolusi apa pun, mudah direvisi, dan setiap teks atau angka bisa diubah tanpa membuat ulang dari awal.
+
+---
+
+## 🛠 Mengatasi masalah
+
+| Masalah | Solusi |
+|---|---|
+| Model AI tidak muncul setelah login | Tutup jendela terminal Kinetik lalu jalankan lagi. |
+| `fetch failed` saat membuat gambar | Buka **Settings → Image generation**, pilih **Same as the chat model**, lalu jalankan ulang Kinetik. |
+| Tidak ada suara narasi | Pastikan Python terpasang, lalu jalankan `pip install -r requirements.txt`. |
+| Render gagal / "ffmpeg not found" | Pasang FFmpeg (`winget install Gyan.FFmpeg`), lalu buka terminal baru. |
+| Laptop terasa berat saat render | Tutup aplikasi lain, atau turunkan *render concurrency* di Settings (default 2). |
+| Port 3210 sudah dipakai | Jalankan dengan port lain: `$env:PORT=3300; npm start` (PowerShell) atau `PORT=3300 npm start` (macOS/Linux). |
+
+---
+
+<details>
+<summary><b>📁 Untuk developer — struktur project & perintah</b></summary>
+
+<br />
+
+```
+server/            backend (Express + Vite middleware, satu port)
+  agent/           loop agent, system prompt, definisi tools
+  subscription/    login Codex / Claude / Antigravity + gateway OpenAI-compatible
+  bundle.ts        bundle Rspack per project (di-cache berdasarkan hash source)
+  render.ts        snapshot (renderStill) + render final (renderMedia)
+  tts.ts / .py     Edge TTS + timing per kata
+  media.ts         gambar AI, stok foto/video, unduhan
+kit/               library '@kit' untuk adegan: Narration, Captions, AnimatedAsset, Sprite
+templates/project  template project baru
+web/               UI React (chat, preview, editor, aset, render, settings)
+cli/               klien terminal (memakai core yang sama)
+workspace/<id>/    project kamu: project.json, chat.json, src/, public/, renders/
+data/              config.json, akun login (terenkripsi), cache bundle — tidak di-commit
+```
+
+| Perintah | Fungsi |
+|---|---|
+| `npm start` | Menjalankan server + UI di http://localhost:3210 |
+| `npm run dev` | Mode pengembangan (server restart otomatis) |
+| `npm run cli` | Klien terminal: `/render draft`, `/snap`, `/check`, `/exit` |
+| `npm run typecheck` | Cek TypeScript |
+| `npm run smoke` | Tes TTS → tulis adegan → cek → snapshot tanpa LLM |
+| `npm run mock-llm` | LLM palsu di http://localhost:4010/v1 untuk tes |
+
+Provider LLM apa pun yang kompatibel dengan OpenAI (`/v1`, tool calling, idealnya bisa melihat gambar) bisa dipakai: OpenAI, OpenRouter, Gemini, DeepSeek, Groq, LM Studio, Ollama, dan lainnya.
+
+</details>
+
+<details>
+<summary><b>💡 Tips untuk laptop dengan RAM 8 GB</b></summary>
+
+<br />
+
+- Render concurrency default 2 (atur di Settings). Naikkan hanya kalau RAM masih longgar.
+- Tutup aplikasi berat saat render. Chrome headless memakai RAM untuk setiap tab render.
+- Snapshot pertama setelah server menyala lebih lambat (bundle + browser mulai). Berikutnya lebih cepat.
+- Kalau Rspack bermasalah, pakai webpack: `KINETIK_BUNDLER=webpack npm start`.
+
+</details>
+
+---
+
+## 📜 Lisensi Remotion
+
+Kinetik memakai [Remotion](https://www.remotion.dev) sebagai mesin video. Remotion gratis untuk individu dan perusahaan dengan maksimal 3 karyawan. Untuk tim yang lebih besar, cek [remotion.dev/license](https://remotion.dev/license).
+
+<div align="center">
+<br />
+<sub>Dibuat dengan ⚡ di Indonesia · <a href="https://github.com/onesyah05/kinetik/releases">Rilis</a> · <a href="https://github.com/onesyah05/kinetik/issues">Laporkan masalah</a></sub>
+</div>

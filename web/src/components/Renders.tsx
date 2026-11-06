@@ -73,7 +73,18 @@ export const Renders: React.FC<{project: Project; bus: Bus}> = ({project, bus}) 
     setError('');
     try {
       doneCount.current = 0;
-      setJob(await api.render(project.id, quality, allPicked && multi ? 'all' : selection.map((v) => v.id)));
+      const ids = selection.map((v) => v.id);
+      const started = await api.render(project.id, quality, allPicked && multi ? 'all' : ids);
+      // A server started before this feature ignores the selection and renders the current video.
+      // The page itself is always fresh (Vite serves it from disk), so check what the server did.
+      const ignored = !started.videos || (multi && !allPicked && started.videos.map((v) => v.id).join() !== ids.join());
+      if (ignored) {
+        await api.cancelRender(started.jobId).catch(() => undefined);
+        setJob(null);
+        setError('The Kinetik server is still running older code, so it would render the wrong video. Restart Kinetik (close its terminal, then run it again) and render again.');
+        return;
+      }
+      setJob(started);
     } catch (e: any) {
       setError(e.message);
     }

@@ -4,7 +4,9 @@ import path from 'node:path';
 import express, {type NextFunction, type Request, type Response} from 'express';
 import multer from 'multer';
 import {createServer as createVite} from 'vite';
-import {ROOT, safeJoin, toPosix} from './paths';
+import {DATA, HOME, WORKSPACE, linkDependencies, safeJoin, toPosix} from './paths';
+import viteConfig from '../vite.config';
+import {exec} from 'node:child_process';
 import {addClient} from './events';
 import {getConfig, saveConfig, type Config} from './config';
 import {
@@ -36,6 +38,9 @@ import {dropBundle} from './bundle';
 import {clearHistory, isRunning, loadHistory, runAgent, stopAgent} from './agent/agent';
 import {subscriptionRouter} from './subscription/routes';
 import {syncSubscriptionProviders} from './subscription/sync';
+
+// npm installs keep projects in ~/Kinetik; give them the package's dependencies.
+linkDependencies();
 
 const PORT = Number(process.env.PORT || 3210);
 const app = express();
@@ -121,10 +126,10 @@ app.get('/api/voices', h(async (req) => listVoices(String(req.query.locale ?? ''
 /** Speak a short line with the current voice settings and return the MP3, for the Settings "Test voice" button. */
 app.post('/api/tts/test', async (req, res) => {
   try {
-    const dir = path.join(ROOT, 'data', 'voice-test');
+    const dir = path.join(DATA, 'voice-test');
     fs.rmSync(dir, {recursive: true, force: true});
     const id = 'voice-test-tmp';
-    const fake = path.join(ROOT, 'workspace', id);
+    const fake = path.join(WORKSPACE, id);
     fs.mkdirSync(path.join(fake, 'src'), {recursive: true});
     try {
       const r = await synthesizeTest(req.body?.text, req.body?.direction, fake);
@@ -290,9 +295,12 @@ app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) =>
 
 const httpServer = http.createServer(app);
 const vite = await createVite({
-  configFile: path.join(ROOT, 'vite.config.ts'),
+  // The config is imported directly: Vite would otherwise write a temp file next to it,
+  // which fails when Kinetik is installed in a read-only global folder.
+  ...viteConfig,
+  configFile: false,
   // HMR websocket shares the app's port, so only one port is needed.
-  server: {middlewareMode: true, hmr: {server: httpServer}},
+  server: {...viteConfig.server, middlewareMode: true, hmr: {server: httpServer}},
   appType: 'spa',
 });
 app.use(vite.middlewares);
@@ -305,7 +313,13 @@ httpServer.on('error', (e: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 httpServer.listen(PORT, () => {
-  console.log(`\n  Kinetik running at http://localhost:${PORT}\n`);
-  fs.mkdirSync(path.join(ROOT, 'workspace'), {recursive: true});
+  const url = `http://localhost:${PORT}`;
+  console.log(`\n  Kinetik running at ${url}\n  Projects and settings: ${HOME}\n`);
+  fs.mkdirSync(WORKSPACE, {recursive: true});
   warmupBrowser();
+  // `kinetik start` asks for the browser to open once the server is ready.
+  if (process.env.KINETIK_OPEN === '1') {
+    const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
+    exec(cmd, () => undefined);
+  }
 });

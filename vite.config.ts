@@ -2,19 +2,22 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
+import {DATA, WORKSPACE} from './server/paths';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: path.join(root, 'web'),
+  // Cache next to the user's data: an npm install folder may be read-only.
+  cacheDir: path.join(DATA, 'vite'),
   plugins: [react()],
   resolve: {
     alias: {'@kit': path.join(root, 'kit', 'index.tsx')},
     dedupe: ['react', 'react-dom', 'remotion'],
   },
   server: {
-    // Project code lives in ../workspace and is imported via /@fs/ for live preview.
-    fs: {allow: [root]},
+    // Project code lives in the workspace (next to the code, or ~/Kinetik for npm installs) and is imported via /@fs/.
+    fs: {allow: [root, WORKSPACE]},
     watch: {ignored: ['**/data/**', '**/renders/**', '**/.snapshots/**', '**/chat.json']},
   },
   optimizeDeps: {

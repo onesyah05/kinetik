@@ -4,7 +4,8 @@
 
 ### Ceritakan videonya. AI yang menulis, menganimasikan, dan merender — langsung di laptopmu.
 
-[![Versi](https://img.shields.io/badge/versi-0.1.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![Versi](https://img.shields.io/badge/versi-0.2.0-ff7a45?style=for-the-badge)](https://github.com/onesyah05/kinetik/releases)
+[![npm](https://img.shields.io/npm/v/kinetik-studio?style=for-the-badge&color=0b0f1a&label=npm&logo=npm)](https://www.npmjs.com/package/kinetik-studio)
 [![Node](https://img.shields.io/badge/Node.js-20%2B-0b0f1a?style=for-the-badge&logo=nodedotjs&logoColor=6cc24a)](https://nodejs.org)
 [![Remotion](https://img.shields.io/badge/engine-Remotion-0b0f1a?style=for-the-badge&logo=react&logoColor=4cc9f0)](https://www.remotion.dev)
 [![Platform](https://img.shields.io/badge/Windows%20·%20macOS%20·%20Linux-0b0f1a?style=for-the-badge)](#-mulai-dalam-5-menit)
@@ -79,28 +80,70 @@ Semua video di bawah ini dibuat **sepenuhnya oleh agent Kinetik** dari satu kali
 
 ## 🚀 Mulai dalam 5 menit
 
-### Yang perlu dipasang dulu (sekali saja)
+### 1 · Pasang kebutuhannya (sekali saja)
 
 | Program | Untuk apa | Cara pasang |
 |---|---|---|
 | **Node.js 20+** | Menjalankan Kinetik | Unduh versi **LTS** di [nodejs.org](https://nodejs.org) |
-| **FFmpeg** | Membuat file MP4 | Windows: buka *Terminal*, ketik `winget install Gyan.FFmpeg` |
-| **Python 3** | Suara narasi & latar transparan | [python.org](https://www.python.org/downloads/) — centang **"Add python.exe to PATH"** |
+| **FFmpeg** | Membuat file MP4 | Windows: `winget install Gyan.FFmpeg` · macOS: `brew install ffmpeg` · Linux: `sudo apt install ffmpeg` |
+| **Python 3** | Suara narasi & latar transparan | [python.org](https://www.python.org/downloads/) — di Windows centang **"Add python.exe to PATH"** |
 
-> 💡 Tidak yakin sudah terpasang? Lewati saja. Peluncur Kinetik akan memberi tahu apa yang masih kurang.
+### 2 · Pasang Kinetik dengan satu perintah
 
-### Windows — cara paling mudah
-
-1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.1.0.zip`**, lalu ekstrak.
-2. Klik dua kali **`Start-Kinetik.bat`**.
-3. Tunggu sebentar. Saat pertama kali, Kinetik memasang semua kebutuhannya (beberapa menit, sekali saja).
-4. Browser akan terbuka di **http://localhost:3210**. Selesai! 🎉
-
-> Biarkan jendela hitam (terminal) tetap terbuka selama memakai Kinetik. Tutup jendela itu untuk mematikannya.
-
-### macOS / Linux / cara manual
+Buka **Terminal** (Windows: tekan <kbd>Win</kbd>, ketik *Terminal*), lalu ketik:
 
 ```bash
+npm install -g kinetik-studio
+```
+
+### 3 · Jalankan dari mana saja
+
+```bash
+kinetik
+```
+
+Browser otomatis terbuka di **http://localhost:3210**. Selesai! 🎉
+
+> 💡 Pertama kali dijalankan, ketik `kinetik setup` untuk memasang paket suara narasi, dan `kinetik doctor` untuk mengecek apakah semuanya sudah siap.
+> Biarkan jendela terminal tetap terbuka selama memakai Kinetik. Tekan <kbd>Ctrl</kbd>+<kbd>C</kbd> untuk mematikannya.
+
+### Perintah yang tersedia
+
+| Perintah | Fungsi |
+|---|---|
+| `kinetik` atau `kinetik start` | Menjalankan Kinetik dan membuka browser |
+| `kinetik start --port 3300` | Memakai port lain |
+| `kinetik start --no-open` | Menjalankan tanpa membuka browser |
+| `kinetik start --home D:\VideoKu` | Menyimpan project di folder lain |
+| `kinetik doctor` | Mengecek Node.js, FFmpeg, Python, dan paketnya |
+| `kinetik setup` | Memasang paket Python (suara narasi, latar transparan) |
+| `kinetik cli` | Ngobrol dengan agent langsung di terminal |
+| `kinetik home` | Menampilkan folder tempat project dan pengaturan disimpan |
+| `kinetik --version` | Menampilkan versi |
+
+**Project kamu aman saat update.** Semua project dan pengaturan disimpan di folder **`Kinetik`** di folder pengguna (contoh: `C:\Users\nama\Kinetik`), terpisah dari program. Update cukup dengan `npm install -g kinetik-studio@latest`.
+
+<details>
+<summary><b>Cara lain: tanpa npm (Windows, klik dua kali)</b></summary>
+
+<br />
+
+1. Buka halaman [**Releases**](https://github.com/onesyah05/kinetik/releases/latest), unduh **`kinetik-v0.2.0.zip`**, lalu ekstrak.
+2. Klik dua kali **`Start-Kinetik.bat`**. Saat pertama kali, kebutuhannya dipasang otomatis (beberapa menit, sekali saja).
+3. Browser terbuka di **http://localhost:3210**.
+
+</details>
+
+<details>
+<summary><b>Cara lain: langsung dari GitHub / untuk developer</b></summary>
+
+<br />
+
+```bash
+# pasang perintah kinetik langsung dari GitHub
+npm install -g github:onesyah05/kinetik
+
+# atau clone untuk mengubah kodenya
 git clone https://github.com/onesyah05/kinetik.git
 cd kinetik
 npm install
@@ -108,7 +151,9 @@ pip install -r requirements.txt
 npm start
 ```
 
-Lalu buka **http://localhost:3210** di browser.
+Saat dijalankan dari hasil clone, project disimpan di folder `workspace/` di dalam repo.
+
+</details>
 
 ---
 
@@ -161,10 +206,13 @@ Video di Kinetik adalah **kode React** (memakai [Remotion](https://www.remotion.
 |---|---|
 | Model AI tidak muncul setelah login | Tutup jendela terminal Kinetik lalu jalankan lagi. |
 | `fetch failed` saat membuat gambar | Buka **Settings → Image generation**, pilih **Same as the chat model**, lalu jalankan ulang Kinetik. |
-| Tidak ada suara narasi | Pastikan Python terpasang, lalu jalankan `pip install -r requirements.txt`. |
+| Tidak ada suara narasi | Pastikan Python terpasang, lalu jalankan `kinetik setup`. |
 | Render gagal / "ffmpeg not found" | Pasang FFmpeg (`winget install Gyan.FFmpeg`), lalu buka terminal baru. |
 | Laptop terasa berat saat render | Tutup aplikasi lain, atau turunkan *render concurrency* di Settings (default 2). |
-| Port 3210 sudah dipakai | Jalankan dengan port lain: `$env:PORT=3300; npm start` (PowerShell) atau `PORT=3300 npm start` (macOS/Linux). |
+| Port 3210 sudah dipakai | Kinetik mungkin sudah berjalan di jendela lain. Atau pakai port lain: `kinetik --port 3300`. |
+| Perintah `kinetik` tidak dikenal | Tutup lalu buka lagi Terminal setelah `npm install -g`. Masih gagal? Cek `npm prefix -g` ada di PATH. |
+| macOS/Linux: `EACCES` saat `npm install -g` | Pasang Node lewat [nvm](https://github.com/nvm-sh/nvm) agar tidak perlu `sudo`. |
+| Ingin tahu apa yang kurang | Jalankan `kinetik doctor`. |
 
 ---
 
@@ -191,7 +239,7 @@ data/              config.json, akun login (terenkripsi), cache bundle — tidak
 
 | Perintah | Fungsi |
 |---|---|
-| `npm start` | Menjalankan server + UI di http://localhost:3210 |
+| `npm start` | Menjalankan server + UI di http://localhost:3210 (sama dengan `kinetik start --no-open`) |
 | `npm run dev` | Mode pengembangan (server restart otomatis) |
 | `npm run cli` | Klien terminal: `/render draft`, `/snap`, `/check`, `/exit` |
 | `npm run typecheck` | Cek TypeScript |
@@ -210,7 +258,7 @@ Provider LLM apa pun yang kompatibel dengan OpenAI (`/v1`, tool calling, idealny
 - Render concurrency default 2 (atur di Settings). Naikkan hanya kalau RAM masih longgar.
 - Tutup aplikasi berat saat render. Chrome headless memakai RAM untuk setiap tab render.
 - Snapshot pertama setelah server menyala lebih lambat (bundle + browser mulai). Berikutnya lebih cepat.
-- Kalau Rspack bermasalah, pakai webpack: `KINETIK_BUNDLER=webpack npm start`.
+- Kalau Rspack bermasalah, pakai webpack: jalankan dengan variabel `KINETIK_BUNDLER=webpack`.
 
 </details>
 

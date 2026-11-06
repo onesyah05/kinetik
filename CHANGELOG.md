@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.2.0 — 2026-11-06
+
+### Baru
+- **Pasang dengan satu perintah**: `npm install -g kinetik-studio`, lalu jalankan `kinetik` dari terminal mana saja.
+- **Perintah `kinetik`**: `start` (buka browser otomatis), `doctor` (cek FFmpeg, Python, dan paketnya), `setup` (pasang paket Python), `cli`, `home`, `--port`, `--no-open`, `--home`.
+- **Data terpisah dari program**: hasil instalasi npm menyimpan project dan pengaturan di `~/Kinetik`, jadi update atau pasang ulang tidak menghapus apa pun. Hasil clone git tetap memakai `workspace/` di dalam repo.
+
+### Perbaikan
+- Cache Vite dan file sementara tidak lagi ditulis ke folder program (aman untuk instalasi global yang read-only).
+- Dependensi yang dibutuhkan saat berjalan (`vite`, `@vitejs/plugin-react`, `@codemirror/view`) dipindah ke `dependencies`.
+- `kinetik doctor` mendeteksi paket Python dengan benar di Windows.
+
 ## v0.1.0 — 2026-11-06
 
 Rilis publik pertama Kinetik.

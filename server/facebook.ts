@@ -4,7 +4,8 @@
 // the project's own LLM, with Google Trends for the region as a hint.
 import fs from 'node:fs';
 import path from 'node:path';
-import {Readable} from 'node:stream';
+import http from 'node:http';
+import https from 'node:https';
 import {spawnSync} from 'node:child_process';
 import {getConfig, getProvider, type Config} from './config';
 import {emit} from './events';
@@ -96,9 +97,24 @@ const graphError = (j: any, status: number, what: string) => {
     1363128: 'Duration not supported. Reels must be 3 to 90 seconds long.',
     1363129: 'Frame rate not supported. Reels need 24 to 60 fps.',
   };
-  const friendly = known[sub] ?? known[code];
-  const raw = e.error_user_msg || e.message || `HTTP ${status}`;
-  return new Error(`${what}: ${friendly ? `${friendly} (${raw})` : raw}`);
+  // The upload host (rupload) answers {debug_info: {type, message}} instead of {error}.
+  const dbg = j?.debug_info;
+  const uploadHints: Record<string, string> = {
+    NotAuthorizedError: 'Facebook did not accept the token for uploading. Use the Page access token of this Page (not the user token).',
+    OffsetInvalidError: 'The upload got out of step with Facebook. Try posting again.',
+    PartialRequestError: 'The upload was cut off. Check the internet connection and try again.',
+    ProcessingFailedError: 'Facebook could not read this video file. Render it again and retry.',
+  };
+  const friendly = known[sub] ?? known[code] ?? (dbg?.type ? uploadHints[dbg.type] : undefined);
+  const raw =
+    e.error_user_msg ||
+    e.message ||
+    (dbg ? [dbg.type, dbg.message].filter(Boolean).join(': ') : '') ||
+    (typeof j?.raw === 'string' && j.raw.trim() ? j.raw.trim().slice(0, 300) : '') ||
+    `HTTP ${status}`;
+  const err = new Error(`${what}: ${friendly ? `${friendly} (${raw})` : raw}`);
+  console.error(`[facebook] ${err.message}`);
+  return err;
 };
 
 const graphGet = async (pathAndQuery: string, token: string) => {
@@ -394,14 +410,43 @@ export const publishReel = (
             publish();
           }
         });
-        const r = await fetch(uploadUrl, {
-          method: 'POST',
-          headers: {authorization: `OAuth ${fb.pageToken}`, offset: String(offset), file_size: String(size), 'content-type': 'application/octet-stream'},
-          body: Readable.toWeb(stream) as unknown as BodyInit,
-          duplex: 'half',
-        } as RequestInit & {duplex: 'half'});
-        const j: any = await r.json().catch(() => ({}));
-        if (!r.ok || j.success === false || j.error) throw graphError(j, r.status, 'Upload failed');
+        // A plain request with Content-Length, like the curl example in Meta's docs:
+        // rupload does not take chunked uploads, which is what fetch() sends for a stream.
+        const {status, text} = await new Promise<{status: number; text: string}>((resolve, reject) => {
+          const u = new URL(uploadUrl);
+          const req = (u.protocol === 'http:' ? http : https).request(
+            u,
+            {
+              method: 'POST',
+              headers: {
+                authorization: `OAuth ${fb.pageToken}`,
+                offset: String(offset),
+                file_size: String(size),
+                'content-type': 'application/octet-stream',
+                'content-length': String(size - offset),
+              },
+              timeout: 10 * 60 * 1000,
+            },
+            (res) => {
+              let body = '';
+              res.setEncoding('utf8');
+              res.on('data', (c) => (body += c));
+              res.on('end', () => resolve({status: res.statusCode ?? 0, text: body}));
+              res.on('error', reject);
+            },
+          );
+          req.on('timeout', () => req.destroy(new Error('Upload timed out')));
+          req.on('error', reject);
+          stream.on('error', (e) => req.destroy(e));
+          stream.pipe(req);
+        });
+        let j: any;
+        try {
+          j = JSON.parse(text);
+        } catch {
+          j = {raw: text};
+        }
+        if (status < 200 || status >= 300 || j.success === false || j.error || j.debug_info) throw graphError(j, status, 'Upload failed');
       };
       try {
         await send(0);

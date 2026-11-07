@@ -4,6 +4,10 @@
 
 ### Baru
 - **Model Muse tambahan**: `muse-spark-1.3-contributor` dan `muse-spark-1.2-contributor` kini muncul di pemilih model untuk akun Muse Code.
+- **Model Antigravity lebih lengkap**: Kinetik kini mengaku sebagai versi Antigravity terbaru (dibaca otomatis dari server update Antigravity), jadi model baru seperti `gemini-3.8-flash-medium/low/high` ikut muncul.
+
+### Perbaikan
+- Antigravity tidak lagi menolak permintaan dengan "This version of Antigravity is no longer supported". Kalau server update Antigravity lambat atau tidak bisa dihubungi, Kinetik memakai versi cadangan yang dikenal tanpa membuat chat macet.
 
 ## v0.7.5 — 2026-11-07
 

@@ -376,7 +376,7 @@ async function generateAntigravityImage(acct: SubscriptionAccount, req: ImageReq
   parts.push({text: req.prompt});
   const res = await fetch(`${ANTIGRAVITY_BASE}/v1internal:generateContent`, {
     method: 'POST',
-    headers: antigravityHeaders(token),
+    headers: await antigravityHeaders(token),
     body: JSON.stringify({
       model,
       project,
@@ -588,10 +588,49 @@ async function* consumeResponsesSSE(
 // host answers 429 for the same free-tier account.
 const ANTIGRAVITY_BASE = 'https://daily-cloudcode-pa.googleapis.com';
 const ANTIGRAVITY_METADATA = {ideType: 'ANTIGRAVITY', platform: 'PLATFORM_UNSPECIFIED', pluginType: 'GEMINI'};
-const antigravityHeaders = (token: string): Record<string, string> => ({
+
+/**
+ * The backend gates model access on the Antigravity client version in the
+ * User-Agent and refuses stale ones with "This version of Antigravity is no
+ * longer supported". The real client is `antigravity/hub/<version>
+ * (aidev_client; os_type=…; arch=…; cl=…)`. We discover the newest version from
+ * the app's own auto-updater manifest and fall back to a recent pin; the
+ * backend gates on the version, not on the opaque `cl`/os/arch fields.
+ */
+const ANTIGRAVITY_UPDATER = 'https://antigravity-hub-auto-updater-974169037036.us-central1.run.app';
+const ANTIGRAVITY_UA_FALLBACK_VERSION = '2.29.0';
+let antigravityVersion: {value: string; until: number} | null = null;
+
+/** Reads a version out of the updater's answers: a YAML manifest or its "Stable Version: x.y.z" status line. */
+const versionIn = (text: string) => {
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^\s*version\s*:\s*(?:"([^"]*)"|'([^']*)'|([^\s#]+))\s*(?:#.*)?$/.exec(line);
+    const v = (m?.[1] ?? m?.[2] ?? m?.[3])?.trim();
+    if (v && /^\d+(\.\d+)*$/.test(v)) return v;
+  }
+  return /Stable Version:\s*(\d+(?:\.\d+)+)/i.exec(text)?.[1];
+};
+
+const resolveAntigravityVersion = async (): Promise<string> => {
+  if (antigravityVersion && Date.now() < antigravityVersion.until) return antigravityVersion.value;
+  // The manifest path has answered 404 at times; the updater's root page names the stable version.
+  for (const url of [`${ANTIGRAVITY_UPDATER}/manifest/latest-win32-x64.yml`, `${ANTIGRAVITY_UPDATER}/`]) {
+    try {
+      const r = await fetch(url, {signal: AbortSignal.timeout(5000)});
+      const v = r.ok ? versionIn(await r.text()) : undefined;
+      if (v) return (antigravityVersion = {value: v, until: Date.now() + 6 * 3600_000}).value;
+    } catch {
+      /* slow or offline: try the next source */
+    }
+  }
+  // Retry the lookup in 10 minutes rather than pinning the fallback for the whole session.
+  return (antigravityVersion = {value: antigravityVersion?.value ?? ANTIGRAVITY_UA_FALLBACK_VERSION, until: Date.now() + 10 * 60_000}).value;
+};
+
+const antigravityHeaders = async (token: string): Promise<Record<string, string>> => ({
   'content-type': 'application/json',
   authorization: `Bearer ${token}`,
-  'user-agent': 'antigravity/1.15.8 windows/amd64',
+  'user-agent': `antigravity/hub/${await resolveAntigravityVersion()} (aidev_client; os_type=windows; arch=amd64; cl=963137146)`,
 });
 
 /**
@@ -615,7 +654,7 @@ async function antigravityProject(acct: SubscriptionAccount, token: string): Pro
   const cached = acct.authState?.projectId;
   if (typeof cached === 'string' && cached) return cached;
   const post = async (method: string, body: unknown) => {
-    const r = await fetch(`${ANTIGRAVITY_BASE}/v1internal:${method}`, {method: 'POST', headers: antigravityHeaders(token), body: JSON.stringify(body)});
+    const r = await fetch(`${ANTIGRAVITY_BASE}/v1internal:${method}`, {method: 'POST', headers: await antigravityHeaders(token), body: JSON.stringify(body)});
     if (!r.ok) throw new Error(`Antigravity ${method} ${r.status}: ${(await r.text()).slice(0, 200)}`);
     return (await r.json()) as any;
   };
@@ -769,7 +808,7 @@ async function* streamAntigravity(
   const res = await fetch(`${ANTIGRAVITY_BASE}/v1internal:streamGenerateContent?alt=sse`, {
     method: 'POST',
     signal,
-    headers: {...antigravityHeaders(token), accept: 'text/event-stream'},
+    headers: {...(await antigravityHeaders(token)), accept: 'text/event-stream'},
     body: JSON.stringify(envelope),
   });
   if (!res.ok || !res.body) throw new Error(`Antigravity error ${res.status}: ${(await res.text()).slice(0, 300)}`);
@@ -820,7 +859,7 @@ async function listAntigravityModels(acct: SubscriptionAccount): Promise<string[
   const project = await antigravityProject(acct, token);
   const r = await fetch(`${ANTIGRAVITY_BASE}/v1internal:fetchAvailableModels`, {
     method: 'POST',
-    headers: antigravityHeaders(token),
+    headers: await antigravityHeaders(token),
     body: JSON.stringify({project}),
   });
   if (!r.ok) throw new Error(`Antigravity models ${r.status}: ${(await r.text()).slice(0, 200)}`);

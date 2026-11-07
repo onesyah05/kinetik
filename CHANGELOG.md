@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.6 — 2026-11-07
+
+### Baru
+- **Model Muse tambahan**: `muse-spark-1.3-contributor` dan `muse-spark-1.2-contributor` kini muncul di pemilih model untuk akun Muse Code.
+
 ## v0.7.5 — 2026-11-07
 
 ### Perbaikan

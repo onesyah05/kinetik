@@ -901,5 +901,11 @@ export const DEFAULT_MODELS: Record<LoginKindAlias, string> = {
 };
 type LoginKindAlias = 'codex' | 'claude' | 'antigravity' | 'muse';
 
-/** Models a Muse Code account can use. */
-const MUSE_MODELS = ['muse-spark-1.3', 'muse-spark-1.2', 'muse-spark-1.1'];
+/** Models a Muse Code account can use (from Cartethyia's `muse-code` catalog). */
+const MUSE_MODELS = [
+  'muse-spark-1.3',
+  'muse-spark-1.3-contributor',
+  'muse-spark-1.2',
+  'muse-spark-1.2-contributor',
+  'muse-spark-1.1',
+];

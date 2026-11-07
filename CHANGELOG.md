@@ -1,5 +1,12 @@
 # Changelog
 
+## Belum dirilis
+
+### Perbaikan
+- **Tidak ada lagi halaman kosong saat terjadi error**: kalau tampilan Kinetik crash, muncul pesan error-nya beserta tombol **Reload**, **Back to projects**, dan **Copy details**, bukan layar gelap kosong. Project tetap aman.
+- Kalau Kinetik gagal dimulai karena sebuah file tidak termuat, alasannya ditampilkan.
+- Setelah update, halaman memuat ulang sendiri kalau browser masih meminta file dari versi lama.
+
 ## v0.7.3 — 2026-11-07
 
 ### Perbaikan

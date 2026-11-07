@@ -491,3 +491,8 @@ svg.lucide { stroke-width: 1.5px; flex: none; }
 .model-option.on { color: var(--accent); }
 .model-option .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .model-note { padding: 4px 8px; font-size: 12px; color: var(--faint); }
+
+/* Shown instead of a blank page when the UI crashes */
+.crash { max-width: 760px; margin: 64px auto; padding: 0 16px; color: var(--text); }
+.crash h1 { font-size: 20px; line-height: 28px; font-weight: 500; margin: 0 0 4px; }
+.crash pre { margin: 16px 0; padding: 12px; border-radius: 8px; background: var(--navy-0); border: 1px solid var(--line); font: 12px/18px var(--mono); color: #ffb4a0; white-space: pre-wrap; word-break: break-word; max-height: 50vh; overflow: auto; }

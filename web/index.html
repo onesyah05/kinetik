@@ -8,6 +8,16 @@
   </head>
   <body style="margin:0;background:#080d1a">
     <div id="root"><div style="padding:40px;text-align:center;color:#7884a0;font-family:system-ui,sans-serif">Loading Kinetik</div></div>
+    <script>
+      // If the app never starts (a file failed to load), say so instead of staying blank.
+      window.addEventListener('error', function (e) {
+        var r = document.getElementById('root');
+        if (r && r.textContent.indexOf('Loading Kinetik') >= 0)
+          r.innerHTML = '<div style="padding:40px;text-align:center;color:#ffb4a0;font:14px system-ui,sans-serif">Kinetik could not start: ' +
+            String((e && (e.message || (e.target && e.target.src))) || 'a file failed to load').replace(/</g, '&lt;') +
+            '<br><br><a href="" style="color:#ff7a45">Reload</a></div>';
+      }, true);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

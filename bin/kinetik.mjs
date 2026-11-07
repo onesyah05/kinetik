@@ -99,43 +99,98 @@ const doctor = () => {
   return rows.every((r) => r[1]);
 };
 
-const setup = () => {
+/**
+ * Pythons to build Kinetik's environment from. Well-established versions come first: a
+ * brand-new Python (3.15 in late 2026) may lack wheels for scipy/opencv or ship a broken ensurepip.
+ */
+const pythonCandidates = () => {
+  const list =
+    process.platform === 'win32'
+      ? [SYSTEM_PYTHON, 'py']
+      : ['python3.13', 'python3.12', 'python3.14', 'python3.11', 'python3.10', SYSTEM_PYTHON, 'python3.15', 'python'];
+  return [...new Set(list)].filter((p) => has(p, ['--version']));
+};
+const pyVersion = (p) => (spawnSync(p, ['--version'], {encoding: 'utf8'}).stdout || '').trim() || p;
+const hasPip = (py) => spawnSync(py, ['-m', 'pip', '--version'], {stdio: 'ignore'}).status === 0;
+
+/** Make data/python from `base`. Works around a missing or broken ensurepip. */
+const makeVenv = async (base) => {
+  const dir = venvDir();
+  fs.rmSync(dir, {recursive: true, force: true});
+  fs.mkdirSync(path.dirname(dir), {recursive: true});
+  if (spawnSync(base, ['-m', 'venv', dir], {stdio: 'inherit'}).status === 0 && fs.existsSync(venvPython()) && hasPip(venvPython())) return true;
+
+  // ensurepip failed: make the environment without pip, then bring pip in another way.
+  fs.rmSync(dir, {recursive: true, force: true});
+  if (spawnSync(base, ['-m', 'venv', '--without-pip', dir], {stdio: 'inherit'}).status !== 0 || !fs.existsSync(venvPython())) return false;
+  console.log(`  ${c.dim('Adding pip to the environment…')}`);
+  // 1) the system pip can install into another environment (pip 22.3+).
+  if (hasPip(base)) spawnSync(base, ['-m', 'pip', '--python', venvPython(), 'install', '--quiet', 'pip'], {stdio: 'inherit'});
+  if (hasPip(venvPython())) return true;
+  // 2) the official bootstrap script.
+  try {
+    const r = await fetch('https://bootstrap.pypa.io/get-pip.py');
+    if (r.ok) {
+      const script = path.join(dir, 'get-pip.py');
+      fs.writeFileSync(script, Buffer.from(await r.arrayBuffer()));
+      spawnSync(venvPython(), [script, '--quiet'], {stdio: 'inherit'});
+      fs.rmSync(script, {force: true});
+    }
+  } catch {
+    /* offline */
+  }
+  return hasPip(venvPython());
+};
+
+const setup = async () => {
   banner();
-  if (!has(SYSTEM_PYTHON, ['--version'])) {
-    console.log(`  ${c.red('Python 3 is not installed.')} Get it from https://www.python.org/downloads/ (macOS: brew install python) and run "kinetik setup" again.\n`);
+  const bases = pythonCandidates();
+  if (!bases.length) {
+    console.log(`  ${c.red('Python 3 is not installed.')} Get it from https://www.python.org/downloads/ (macOS: brew install python@3.13) and run "kinetik setup" again.\n`);
     process.exit(1);
   }
   const req = path.join(ROOT, 'requirements.txt');
   const pip = (py, extra = []) => spawnSync(py, ['-m', 'pip', 'install', ...extra, '-r', req], {stdio: 'inherit'}).status === 0;
-  const finish = (ok) => {
-    const ready = ok && pyModulesOk();
-    if (ready) console.log(`\n  ${c.green('✓')} Python packages are ready (${python()}).\n`);
-    else console.log(`\n  ${c.red('✗')} The Python packages did not install. Check the messages above, then run "kinetik setup" again.\n`);
-    process.exit(ready ? 0 : 1);
+  const done = () => {
+    console.log(`\n  ${c.green('✓')} Python packages are ready (${pyVersion(python())}, ${python()}).\n`);
+    process.exit(0);
   };
   console.log('  Installing Python packages (edge-tts, numpy, pillow, scipy, opencv)…\n');
 
   // A Python the user picked: install straight into it.
-  if (process.env.KINETIK_PYTHON) finish(pip(SYSTEM_PYTHON));
+  if (process.env.KINETIK_PYTHON) {
+    if (pip(SYSTEM_PYTHON) && pyModulesOk()) done();
+    console.log(`\n  ${c.red('✗')} The packages did not install into ${SYSTEM_PYTHON}. Check the messages above.\n`);
+    process.exit(1);
+  }
   // Windows: the user's own Python takes packages with --user, like Start-Kinetik.bat.
   if (process.platform === 'win32' && !fs.existsSync(venvPython())) {
-    if (pip(SYSTEM_PYTHON, ['--user'])) finish(true);
+    if (pip(SYSTEM_PYTHON, ['--user']) && pyModulesOk()) done();
     console.log(`\n  ${c.dim('That did not work, so Kinetik will use its own Python environment instead.')}\n`);
   }
+  // An environment from an earlier setup: just finish the install.
+  if (fs.existsSync(venvPython()) && hasPip(venvPython()) && pip(venvPython()) && pyModulesOk()) done();
+
   // macOS / Linux: the system Python refuses pip installs (PEP 668), so Kinetik keeps its own environment.
-  if (!fs.existsSync(venvPython())) {
-    console.log(`  Creating Kinetik's Python environment in ${venvDir()}…\n`);
-    fs.mkdirSync(path.dirname(venvDir()), {recursive: true});
-    const r = spawnSync(SYSTEM_PYTHON, ['-m', 'venv', venvDir()], {stdio: 'inherit'});
-    if (r.status !== 0 || !fs.existsSync(venvPython())) {
-      fs.rmSync(venvDir(), {recursive: true, force: true});
-      const hint = process.platform === 'linux' ? ' On Debian/Ubuntu run: sudo apt install python3-venv' : '';
-      console.log(`\n  ${c.red('Could not create a Python environment.')}${hint}\n`);
-      process.exit(1);
+  for (const base of bases) {
+    console.log(`\n  Creating Kinetik's Python environment with ${pyVersion(base)} in ${venvDir()}…\n`);
+    if (!(await makeVenv(base))) {
+      console.log(`  ${c.dim(`Could not make an environment with ${pyVersion(base)}, trying the next Python.`)}`);
+      continue;
     }
+    spawnSync(venvPython(), ['-m', 'pip', 'install', '--quiet', '--upgrade', 'pip'], {stdio: 'ignore'});
+    if (pip(venvPython()) && pyModulesOk()) done();
+    console.log(`  ${c.dim(`The packages did not install on ${pyVersion(base)}, trying the next Python.`)}`);
   }
-  spawnSync(venvPython(), ['-m', 'pip', 'install', '--upgrade', 'pip'], {stdio: 'ignore'});
-  finish(pip(venvPython()));
+  fs.rmSync(venvDir(), {recursive: true, force: true});
+  const hint =
+    process.platform === 'darwin'
+      ? ' Install a stable Python with: brew install python@3.13, then run "kinetik setup" again.'
+      : process.platform === 'linux'
+        ? ' On Debian/Ubuntu run: sudo apt install python3-venv python3-pip, then run "kinetik setup" again.'
+        : '';
+  console.log(`\n  ${c.red('✗')} Could not set up Python for Kinetik (tried ${bases.map(pyVersion).join(', ')}).${hint}\n`);
+  process.exit(1);
 };
 
 /** Print a one-line notice when a newer release exists (never blocks startup). */
@@ -242,7 +297,7 @@ switch (command) {
     process.exit(doctor() ? 0 : 1);
     break;
   case 'setup':
-    setup();
+    await setup();
     break;
   case 'home':
   case 'where':

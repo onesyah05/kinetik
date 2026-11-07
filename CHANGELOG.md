@@ -1,5 +1,13 @@
 # Changelog
 
+## Belum dirilis
+
+### Perbaikan
+- **`kinetik setup` dengan Python sangat baru (misalnya 3.15 dari Homebrew)**: tidak lagi berhenti di "Could not create a Python environment".
+  - Kinetik mendahulukan Python yang lebih mapan kalau ada (3.13, 3.12, …), karena paket seperti scipy/opencv sering belum tersedia untuk versi terbaru.
+  - Kalau pembuatan pip di lingkungan baru gagal (`ensurepip`), pip dipasang dengan cara lain.
+  - Kalau satu versi Python gagal, versi berikutnya dicoba otomatis.
+
 ## v0.7.2 — 2026-11-07
 
 ### Perbaikan

@@ -1,6 +1,6 @@
 # Changelog
 
-## Belum dirilis
+## v0.8.0 — 2026-11-08
 
 ### Baru
 - **Agent bekerja seperti motion designer**: aturan wajib dari [claude-remotion-skill](https://github.com/haidrrrry/claude-remotion-skill) (MIT) kini dipakai di setiap video:

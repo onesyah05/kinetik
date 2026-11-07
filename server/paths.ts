@@ -23,6 +23,16 @@ export const TEMPLATE = path.join(ROOT, 'templates', 'project');
 export const BUNDLES = path.join(DATA, 'bundles');
 
 /**
+ * Kinetik's own Python environment. `kinetik setup` makes it where pip may not install
+ * into the system Python (Homebrew and most Linux distros, PEP 668).
+ */
+export const VENV = path.join(DATA, 'python');
+const venvPython = path.join(VENV, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python3');
+/** The Python that runs the helper scripts: KINETIK_PYTHON, else Kinetik's venv, else the system one. */
+export const python = () =>
+  process.env.KINETIK_PYTHON || (fs.existsSync(venvPython) ? venvPython : process.platform === 'win32' ? 'python' : 'python3');
+
+/**
  * Project code imports react/remotion/etc. When projects live outside the package
  * (npm install), link HOME/node_modules to the package's dependencies so Vite, the
  * bundler and the compile check all resolve them the same way.

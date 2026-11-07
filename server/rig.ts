@@ -7,15 +7,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {getConfig} from './config';
-import {ROOT} from './paths';
+import {ROOT, python} from './paths';
 import {getProject, projectDir, projectProvider, safeAssetName, writeFile} from './projects';
 import {emit} from './events';
 
-const PY = process.env.KINETIK_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
 
 const runJson = (args: string[], stdin: string) =>
   new Promise<any>((resolve, reject) => {
-    const p = spawn(PY, args, {windowsHide: true});
+    const p = spawn(python(), args, {windowsHide: true});
     let out = '';
     let err = '';
     p.stdout.on('data', (d) => (out += d));

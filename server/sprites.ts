@@ -7,16 +7,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {ROOT} from './paths';
+import {ROOT, python} from './paths';
 import {getProject, projectDir, projectProvider, safeAssetName, writeFile} from './projects';
 import {emit} from './events';
 import {imageGenTarget, removeBackground} from './media';
 
-const PY = process.env.KINETIK_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
 
 const runPy = (script: string, input: unknown) =>
   new Promise<any>((resolve, reject) => {
-    const p = spawn(PY, [path.join(ROOT, 'server', script)], {windowsHide: true});
+    const p = spawn(python(), [path.join(ROOT, 'server', script)], {windowsHide: true});
     let out = '';
     let err = '';
     p.stdout.on('data', (d) => (out += d));

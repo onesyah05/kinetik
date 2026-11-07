@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {getConfig, getProvider} from './config';
-import {ROOT} from './paths';
+import {ROOT, python} from './paths';
 import {run} from './tts';
 import {emit} from './events';
 import {getProject, projectDir, safeAssetName} from './projects';
@@ -74,11 +74,10 @@ export const imageGenTarget = (projectId?: string) => {
 };
 
 const BG_SCRIPT = path.join(ROOT, 'server', 'bgremove.py');
-const PY = process.env.KINETIK_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
 
 /** Make a flat background transparent and trim the empty margin. */
 export const removeBackground = async (file: string) => {
-  const out = await run(PY, [BG_SCRIPT, file, file, '--trim']);
+  const out = await run(python(), [BG_SCRIPT, file, file, '--trim']);
   return JSON.parse(out) as {ok: boolean; removed: number; reason?: string};
 };
 

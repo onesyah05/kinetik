@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.2 — 2026-11-07
+
+### Perbaikan
+- **`kinetik setup` di Mac dan Linux**: tidak lagi gagal dengan error `externally-managed-environment` (PEP 668) dari Python Homebrew atau Python bawaan Linux. Kinetik kini membuat lingkungan Python sendiri di folder datanya (`data/python`), memasang paket di sana, lalu memakainya untuk suara narasi, latar transparan, sprite, dan rig. Python sistem tidak tersentuh.
+- `kinetik doctor` kini menampilkan Python mana yang dipakai Kinetik.
+
 ## v0.7.1 — 2026-11-07
 
 ### Baru

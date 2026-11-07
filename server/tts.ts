@@ -1,13 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {ROOT} from './paths';
+import {ROOT, python} from './paths';
 import {projectDir, safeAssetName, writeFile} from './projects';
 import {getConfig} from './config';
 import {emit} from './events';
 import {estimateWords, geminiSpeak, GEMINI_VOICES} from './tts-gemini';
 
-const PY = process.env.KINETIK_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
 const SCRIPT = path.join(ROOT, 'server', 'tts.py');
 
 export const run = (cmd: string, args: string[], stdin?: string) =>
@@ -132,7 +131,7 @@ export const synthesize = async (
       : input.voice && !isGeminiVoice(input.voice)
         ? input.voice
         : cfg.defaultVoice;
-    const res = JSON.parse(await run(PY, [SCRIPT], JSON.stringify({segments, voice, out}))) as {
+    const res = JSON.parse(await run(python(), [SCRIPT], JSON.stringify({segments, voice, out}))) as {
       words: {text: string; start: number; end: number}[];
       duration: number;
     };
@@ -167,7 +166,7 @@ type Voice = {name: string; locale: string; gender: string; personality: string;
 let voiceCache: Voice[] | null = null;
 /** Voices for a locale prefix. Multilingual voices speak almost any language, so they are always included. */
 export const listVoices = async (locale = '') => {
-  if (!voiceCache) voiceCache = JSON.parse(await run(PY, [SCRIPT], JSON.stringify({cmd: 'voices'})));
+  if (!voiceCache) voiceCache = JSON.parse(await run(python(), [SCRIPT], JSON.stringify({cmd: 'voices'})));
   return voiceCache!.filter((v) => !locale || v.multilingual || v.locale.toLowerCase().startsWith(locale.toLowerCase()));
 };
 

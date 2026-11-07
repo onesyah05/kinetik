@@ -244,6 +244,7 @@ Video di Kinetik adalah **kode React** (memakai [Remotion](https://www.remotion.
 | Model AI tidak muncul setelah login | Tutup jendela terminal Kinetik lalu jalankan lagi. |
 | `fetch failed` saat membuat gambar | Buka **Settings → Image generation**, pilih **Same as the chat model**, lalu jalankan ulang Kinetik. |
 | Tidak ada suara narasi | Pastikan Python terpasang, lalu jalankan `kinetik setup`. |
+| Mac/Linux: `externally-managed-environment` saat `kinetik setup` | Update ke v0.7.2 atau lebih baru, lalu jalankan `kinetik setup` lagi. Kinetik akan membuat lingkungan Python sendiri di folder datanya, jadi Python sistem tidak tersentuh. |
 | Render gagal / "ffmpeg not found" | Pasang FFmpeg (`winget install Gyan.FFmpeg`), lalu buka terminal baru. |
 | Laptop terasa berat saat render | Tutup aplikasi lain, atau turunkan *render concurrency* di Settings (default 2). |
 | Port 3210 sudah dipakai | Kinetik mungkin sudah berjalan di jendela lain. Atau pakai port lain: `kinetik --port 3300`. |

@@ -6,9 +6,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {getConfig, getProvider} from './config';
+import {getConfig} from './config';
 import {ROOT} from './paths';
-import {getProject, projectDir, safeAssetName, writeFile} from './projects';
+import {getProject, projectDir, projectProvider, safeAssetName, writeFile} from './projects';
 import {emit} from './events';
 
 const PY = process.env.KINETIK_PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
@@ -84,7 +84,7 @@ const geminiMasks = async (file: string, parts: string[]): Promise<SegItem[] | n
 const proxyBoxes = async (projectId: string, file: string, labels: string[]): Promise<Box[]> => {
   const c = getConfig();
   // The rig setting wins; otherwise the provider this project chats with (the global default may be offline).
-  const provider = (c.rig?.providerId && c.providers.find((x) => x.id === c.rig?.providerId)) || getProvider(getProject(projectId).providerId);
+  const provider = (c.rig?.providerId && c.providers.find((x) => x.id === c.rig?.providerId)) || projectProvider(projectId);
   if (!provider) throw new Error('No LLM provider configured for part detection.');
   const model = c.rig?.model || provider.model;
   const res = await fetch(`${provider.baseURL.replace(/\/$/, '')}/chat/completions`, {

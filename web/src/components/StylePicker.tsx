@@ -31,7 +31,7 @@ const Sample: React.FC<{project: Project; file: string; live: boolean}> = ({proj
   }, [project.entry, file]);
 
   const settings = useMemo(() => {
-    const {createdAt, updatedAt, providerId, running, entry, thumb, ...s} = project as Project & Record<string, unknown>;
+    const {createdAt, updatedAt, providerId, model, running, entry, thumb, ...s} = project as Project & Record<string, unknown>;
     return s as unknown as ProjectSettings;
   }, [project]);
 

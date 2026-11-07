@@ -7,7 +7,7 @@
 import readline from 'node:readline/promises';
 import {stdin, stdout} from 'node:process';
 import {addClient} from '../server/events';
-import {createProject, listProjects, getProject} from '../server/projects';
+import {createProject, listProjects, getProject, projectProvider} from '../server/projects';
 import {runAgent, clearHistory} from '../server/agent/agent';
 import {checkProject} from '../server/check';
 import {renderSnapshots, startRender, waitForJob} from '../server/render';
@@ -46,7 +46,7 @@ const main = async () => {
   }
   const project = getProject(id);
   addClient(sink as any, id);
-  console.log(`\n${c.acc('Kinetik')} · ${project.name} · ${project.width}x${project.height} · model ${getProvider(project.providerId)?.model}`);
+  console.log(`\n${c.acc('Kinetik')} · ${project.name} · ${project.width}x${project.height} · model ${projectProvider(project.id)?.model}`);
   console.log(c.dim('Preview it in the web app (npm start). Commands: /render [quality], /snap, /check, /clear, /exit\n'));
 
   for (;;) {

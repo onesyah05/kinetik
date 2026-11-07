@@ -2,7 +2,7 @@ import {useEffect, useRef} from 'react';
 import type {ProjectSettings, CaptionSettings, VideoEntry} from '../../kit/settings';
 
 export type {ProjectSettings, CaptionSettings, VideoEntry};
-export type Project = ProjectSettings & {createdAt: number; updatedAt: number; providerId?: string; running?: boolean; entry?: string; thumb?: string};
+export type Project = ProjectSettings & {createdAt: number; updatedAt: number; providerId?: string; model?: string; running?: boolean; entry?: string; thumb?: string};
 
 export type Provider = {
   id: string;

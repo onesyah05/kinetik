@@ -7,10 +7,10 @@ import path from 'node:path';
 import http from 'node:http';
 import https from 'node:https';
 import {spawnSync} from 'node:child_process';
-import {getConfig, getProvider, type Config} from './config';
+import {getConfig, type Config} from './config';
 import {emit} from './events';
 import {DATA, safeJoin} from './paths';
-import {activeVideoId, getProject, projectDir, rendersDir, videoDirRel, videosOf} from './projects';
+import {activeVideoId, getProject, projectDir, projectProvider, rendersDir, videoDirRel, videosOf} from './projects';
 
 const GRAPH = (process.env.KINETIK_FB_GRAPH || 'https://graph.facebook.com').replace(/\/$/, '');
 const VERSION = 'v27.0';
@@ -285,7 +285,7 @@ export const draftCaption = async (projectId: string, file: string): Promise<Cap
   const script = scriptOf(projectId, video.id);
   const region = getConfig().facebook?.trendRegion || 'ID';
   const trends = await trendingTopics(region);
-  const provider = getProvider(p.providerId);
+  const provider = projectProvider(projectId);
   if (!provider) throw new Error('No AI model is set up. Add one in Settings first.');
   const seconds = Math.round(video.durationInFrames / p.fps);
   const prompt = [

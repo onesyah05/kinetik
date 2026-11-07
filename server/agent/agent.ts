@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {randomBytes} from 'node:crypto';
 import OpenAI from 'openai';
-import {getConfig, getProvider, saveConfig, type Provider} from '../config';
+import {getConfig, saveConfig, type Provider} from '../config';
 import {emit} from '../events';
-import {getProject, listAssets, listSourceFiles, projectDir, touchProject} from '../projects';
+import {getProject, listAssets, listSourceFiles, projectDir, projectProvider, touchProject} from '../projects';
 import {buildSystemPrompt} from './prompt';
 import {imageGenTarget} from '../media';
 import {ttsEngine} from '../tts';
@@ -228,7 +228,7 @@ export type RunInput = {
 /** Runs the agent loop for one user message. Resolves when the agent finishes or is stopped. */
 export const runAgent = async (projectId: string, input: RunInput) => {
   if (runs.has(projectId)) throw new Error('Agent is already running for this project.');
-  const provider = getProvider(input.providerId ?? getProject(projectId).providerId);
+  const provider = projectProvider(projectId, input.providerId);
   if (!provider) throw new Error('No LLM provider configured. Open Settings.');
   if (!provider.apiKey && !/localhost|127\.0\.0\.1/.test(provider.baseURL))
     throw new Error(`Provider "${provider.name}" has no API key. Open Settings.`);

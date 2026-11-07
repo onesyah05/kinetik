@@ -11,6 +11,7 @@ import {Renders} from './Renders';
 import {ProjectSettingsPanel} from './ProjectSettings';
 import {VideoSwitcher} from './VideoSwitcher';
 import {UpdateButton} from './UpdateButton';
+import {ModelPicker} from './ModelPicker';
 
 export type Bus = {subscribe: (fn: (e: ServerEvent) => void) => () => void};
 
@@ -76,7 +77,7 @@ export const ProjectView: React.FC<{id: string; onOpenSettings: () => void}> = (
   };
 
   const providerId = project?.providerId ?? config?.activeProvider;
-  const setProvider = async (pid: string) => setProject(await api.updateProject(id, {providerId: pid}));
+  const setModel = async (pid: string, model: string) => setProject(await api.updateProject(id, {providerId: pid, model}));
 
   if (error)
     return (
@@ -134,13 +135,12 @@ export const ProjectView: React.FC<{id: string; onOpenSettings: () => void}> = (
           {renderActive ? 'Rendering' : agentActive ? 'Agent working' : 'Idle'}
         </span>
         <div className="divider" />
-        <select className="select" style={{width: 232, height: 32}} value={providerId} onChange={(e) => setProvider(e.target.value)} title="Model">
-          {config?.providers.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} · {p.model}
-            </option>
-          ))}
-        </select>
+        <ModelPicker
+          providers={config?.providers ?? []}
+          providerId={providerId}
+          model={project.providerId === providerId ? project.model : undefined}
+          onPick={setModel}
+        />
         <UpdateButton />
         <button className="btn ghost icon" onClick={onOpenSettings} title="Settings">
           <Settings size={16} />

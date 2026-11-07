@@ -3,10 +3,12 @@ import path from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {TEMPLATE, WORKSPACE, safeJoin, toPosix} from './paths';
 import {emit} from './events';
+import {getProvider} from './config';
 import type {ProjectSettings, VideoEntry} from '../kit/settings';
 import {defaultCaptions} from '../kit/settings';
 
-export type Project = ProjectSettings & {createdAt: number; updatedAt: number; providerId?: string};
+/** providerId + model: the LLM picked for this project in the header (model overrides the provider's default). */
+export type Project = ProjectSettings & {createdAt: number; updatedAt: number; providerId?: string; model?: string};
 
 /** Files the agent/user may not touch. */
 const MANAGED = new Set(['src/index.ts', 'src/Root.tsx', 'project.json', 'chat.json']);
@@ -89,6 +91,9 @@ export const updateProject = (id: string, patch: Partial<Project>): Project => {
     createdAt: cur.createdAt,
     updatedAt: Date.now(),
   };
+  // A model belongs to one provider: switching provider without naming a model goes back to its default.
+  if (patch.providerId !== undefined && patch.providerId !== cur.providerId && patch.model === undefined) delete next.model;
+  if (!next.model) delete next.model;
   for (const k of ['width', 'height'] as const) {
     next[k] = Math.max(16, Math.round(next[k] / 2) * 2); // h264 needs even sizes
   }
@@ -102,6 +107,13 @@ export const updateProject = (id: string, patch: Partial<Project>): Project => {
   fs.writeFileSync(path.join(projectDir(id), 'project.json'), JSON.stringify(next, null, 2));
   emit({type: 'project_updated', projectId: id, project: {...next, entry: previewEntry(id, next)}});
   return next;
+};
+
+/** The LLM this project chats with: its provider, using the model picked for the project in the header. */
+export const projectProvider = (id: string, providerId?: string) => {
+  const p = getProject(id);
+  const provider = getProvider(providerId ?? p.providerId);
+  return provider && p.model && provider.id === p.providerId ? {...provider, model: p.model} : provider;
 };
 
 // ---------- Videos (several per project, sharing style and assets) ----------

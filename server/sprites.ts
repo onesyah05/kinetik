@@ -7,9 +7,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-import {getProvider} from './config';
 import {ROOT} from './paths';
-import {getProject, projectDir, safeAssetName, writeFile} from './projects';
+import {getProject, projectDir, projectProvider, safeAssetName, writeFile} from './projects';
 import {emit} from './events';
 import {imageGenTarget, removeBackground} from './media';
 
@@ -51,7 +50,7 @@ const describeCharacter = async (id: string, refFile: string) => {
   const cache = path.join(cacheDir, `describe-${path.basename(refFile)}-${fs.statSync(refFile).mtimeMs}.txt`);
   if (fs.existsSync(cache)) return fs.readFileSync(cache, 'utf8');
   // The provider this project chats with; the global default may be offline.
-  const p = getProvider(getProject(id).providerId);
+  const p = projectProvider(id);
   if (!p) throw new Error('No LLM provider configured to describe the reference character.');
   const res = await fetch(`${p.baseURL.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',

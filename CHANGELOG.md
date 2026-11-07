@@ -1,5 +1,10 @@
 # Changelog
 
+## Belum dirilis
+
+### Baru
+- **Pilih model, bukan hanya akun**: tombol model di kanan atas kini membuka daftar semua model dari setiap provider dan akun yang login, diambil langsung dari akunnya. Contohnya, Antigravity menampilkan Gemini 3.x, Gemini 2.5, dan Claude, sedangkan Codex menampilkan semua GPT yang tersedia. Ada kotak cari, dan pilihan model disimpan per project. Pembuatan caption, sprite, dan deteksi bagian rig ikut memakai model yang dipilih.
+
 ## v0.7.0 — 2026-11-07
 
 ### Baru

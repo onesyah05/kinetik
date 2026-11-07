@@ -17,6 +17,7 @@ export * from './settings';
 export * from './asset';
 export * from './puppet';
 export * from './sprite';
+export * from './motion';
 import {defaultCaptions, type CaptionSettings, type ProjectSettings, type VoiceTrack, type Word} from './settings';
 
 // ---------- Context ----------

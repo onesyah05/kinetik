@@ -1,5 +1,19 @@
 # Changelog
 
+## Belum dirilis
+
+### Baru
+- **Agent bekerja seperti motion designer**: aturan wajib dari [claude-remotion-skill](https://github.com/haidrrrry/claude-remotion-skill) (MIT) kini dipakai di setiap video:
+  - tidak ada gerak linear;
+  - elemen masuk dengan 2–3 properti sekaligus dan bergantian (stagger), lalu keluar lebih cepat dari saat masuk;
+  - 5 lapisan di setiap adegan (background hidup, aset, teks, grade warna, grain + vignette);
+  - Ken Burns untuk setiap foto, dan elemen diam tetap "bernapas";
+  - satu warna hero per frame, ritme HIT → diam → build;
+  - safe zone 9:16, tanpa emoji sebagai ikon;
+  - checklist wajib sebelum selesai.
+- **Komponen baru di `@kit`**: `Entrance`, `Stagger`, `WordReveal` (kata kunci disorot), `Counter`, `BgMesh`, `KenBurns`, `Finish` (grade + grain + vignette), `exitStyle`, `breathe`, `tween`, preset `ease` dan `springs`. Semuanya dibuat ringan untuk laptop, tanpa filter blur besar.
+- **Efek suara bawaan**: tool `add_sfx` membuat kit SFX (whoosh, pop, click, tick, bass, riser, shimmer) dan musik latar langsung di project, tanpa unduhan. Agent memasangnya dengan `<Sfx name="whoosh" at={frame} />`, yang otomatis mulai 3 frame lebih awal supaya terasa pas. Video tidak lagi dikirim tanpa suara.
+
 ## v0.7.6 — 2026-11-07
 
 ### Baru

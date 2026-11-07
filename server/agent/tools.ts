@@ -26,6 +26,7 @@ import {listVoices, synthesize} from '../tts';
 import {createVectorAsset, downloadAsset, generateImage, searchStock} from '../media';
 import {rigCharacter} from '../rig';
 import {generateSprite} from '../sprites';
+import {addSfx} from '../sfx';
 
 /** A style choice: either live code (`file`) or an AI-generated still (`image`, a path inside public/). */
 export type StyleOption = {id: string; name: string; description: string; file?: string; image?: string; voice?: string};
@@ -524,6 +525,19 @@ export const TOOLS: ToolDef[] = [
     run: async (a, {projectId}) => {
       const r = await createVectorAsset(projectId, a);
       return {content: `Saved public/${r.svg} and public/${r.png}. Use staticFile('${r.png}') or the SVG.`, images: [`public/${r.png}`]};
+    },
+  },
+  {
+    name: 'add_sfx',
+    description:
+      'Create a sound-effect kit in public/sfx/ (synthesized, instant, free): whoosh, whoosh-fast, swoosh, pop, click, tick, bass, riser, shimmer as WAV, plus an optional music bed. Play them with <Sfx name="whoosh" at={frame} /> from @kit. Videos are never delivered silent: call this once per project before adding hits.',
+    parameters: obj({
+      pad_seconds: num('Also make a soft music bed this long (seconds, usually the video length). 0 = none.'),
+      mood: {type: 'string', enum: ['warm', 'dark', 'bright'], description: 'Chord for the music bed'},
+    }),
+    run: async (a, {projectId}) => {
+      const files = addSfx(projectId, {padSeconds: a.pad_seconds, mood: a.mood});
+      return json({files, usage: '<Sfx name="whoosh" at={entranceFrame} /> starts 3 frames early by itself; <Html5Audio src={staticFile("sfx/pad-warm.wav")} volume={0.18} /> for the bed.'});
     },
   },
   {

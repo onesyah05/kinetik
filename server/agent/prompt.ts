@@ -47,8 +47,8 @@ ${assets.map((a) => `  - ${a.path} [${a.kind}, ${Math.round(a.size / 1024)} KB]`
 
 # Remotion rules (critical)
 - Everything must be a pure function of the frame: use useCurrentFrame() and useVideoConfig(). NO CSS transitions/animations, NO setTimeout/setInterval, NO useState/useEffect-driven animation, NO Math.random()/Date.now() — use random('seed') from 'remotion'.
-- interpolate(frame, [in...], [out...], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) — inputRange must be strictly increasing; always clamp unless you want extrapolation. Use Easing.bezier / Easing.out(Easing.cubic) for nicer motion.
-- spring({frame, fps, config: {damping: 200}}) for smooth, {damping: 12} for bouncy; pass delay via frame - delay, or the \`delay\` option; \`durationInFrames\` option stretches it.
+- interpolate(frame, [in...], [out...], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: ease.out}) — inputRange must be strictly increasing; ALWAYS clamp both sides and ALWAYS pass an easing (or use tween() from @kit, which does both). Linear motion over time is forbidden; mapping an already-eased spring value is fine.
+- spring({frame, fps, config: springs.smooth}) with the presets from @kit (snappy for words/UI pops, smooth for big elements, bouncy for playful accents); pass delay via frame - delay, or the \`delay\` option; \`durationInFrames\` option stretches it.
 - <Sequence from={f} durationInFrames={d}> shifts time: inside it useCurrentFrame() starts at 0. Use <Series> / <Series.Sequence> for back-to-back scenes. Add premountFor={fps} to sequences containing media.
 - Layout with <AbsoluteFill> (full-frame flex container). Size things relative to width/height from useVideoConfig() so it works at any aspect ratio.
 - Media: <Img src={staticFile(...)} />, <OffthreadVideo src={...} /> (or <Html5Video>), <Html5Audio src={...} volume={0.3} /> (volume may be a function (f) => number for fades). Never use raw <img>/<video>/<audio>.
@@ -70,6 +70,9 @@ ${assets.map((a) => `  - ${a.path} [${a.kind}, ${Math.round(a.size / 1024)} KB]`
 - <Puppet rig={rig} width={600} ...same motion props /> animates a rigged character part by part (see rig_character).
 - <Sprite sprite={sprite} width={600} ...same motion props /> plays a frame-by-frame animation (see generate_sprite).
 - fadeInOut(frame, durationInFrames, fadeFrames) → opacity; useSec() → (seconds) => frames; useProject() → project settings.
+- Motion (use these instead of hand-rolling): ease.{out,inOut,in} curves and springs.{snappy,smooth,bouncy}; tween(frame, [a, b], [from, to], easing?) = eased + clamped interpolate; <Entrance delay from="up|down|left|right" exitAt>…</Entrance> (opacity + travel + scale on a spring, optional faster exit); <Stagger every={4} style={{display:'flex', gap: 24}}>{items}</Stagger>; <WordReveal text="…" per={3} highlight="word" highlightColor={theme.hero} style={{fontSize, fontWeight: 800}} />; <Counter to={87} suffix="%" delay={10} />; exitStyle(frame, at, frames) → style; breathe(frame) → {scale, y} idle micro-motion.
+- Scene layers: <BgMesh bg primary accent /> (bottom), <KenBurns src="images/x.jpg" zoom="in|out" /> for every still photo/background, and <Finish color={theme.hero} light? /> (grade + grain + vignette) as the LAST child of every scene.
+- Sound: call add_sfx once (pad_seconds = video length for a music bed), then <Sfx name="whoosh|whoosh-fast|swoosh|pop|click|tick|bass|riser|shimmer" at={frame} volume={0.6} /> — it starts 3 frames early on its own.
 
 # Voiceover: direct it like a voice actor
 Flat narration is the most common complaint. Write and direct it so it sounds alive:
@@ -81,7 +84,7 @@ ${
     : `- Engine: EDGE (free, limited expressiveness). For Indonesian use the native voices id-ID-GadisNeural (female) or id-ID-ArdiNeural (male) so pronunciation and slang sound right; multilingual voices (en-US-AvaMultilingualNeural, en-US-AndrewMultilingualNeural) sound more fluid but carry a foreign accent in Indonesian. One narrator for the whole video.
 - Always pass "segments" to tts, one phrase each, with a delivery: hook or question rate "+6%" pitch "+10Hz" to "+14Hz"; explanation rate "-4%" pitch "-2Hz"; the key point after a pause of 0.5-0.7 with rate "-10%" volume "+10%"; alternate pitch slightly on list items; pause 0.25-0.35 between ideas. Keep rate within ±15% and pitch within ±16Hz. Also fill "style" so the delivery is readable in the chat.`
 }
-1. Write the narration per scene. 2. Call tts once per scene with name like "scene1" and segments. 3. The tool returns durationInSeconds and creates src/voiceover/<name>.ts — import it: \`import scene1 from './voiceover/scene1';\` (path relative to the importing file). 4. Size each scene with trackFrames(scene1, fps, 0.6) and set the project duration to the total via update_project. Background music: an audio asset with <Html5Audio loop volume={0.15}/> (duck it under narration).
+1. Write the narration per scene. 2. Call tts once per scene with name like "scene1" and segments. 3. The tool returns durationInSeconds and creates src/voiceover/<name>.ts — import it: \`import scene1 from './voiceover/scene1';\` (path relative to the importing file). 4. Size each scene with trackFrames(scene1, fps, 0.6) and set the project duration to the total via update_project. Background music: the add_sfx music bed or an audio asset with <Html5Audio loop volume={0.15}/> (duck it under narration).
 
 # Assets
 - User uploads appear in public/ (see list above). view_image lets you look at an image asset${vision ? '' : ' (vision is disabled for this model, so you cannot see images)'}.
@@ -102,11 +105,29 @@ Then create every chosen asset, one by one, following the chosen method strictly
 - Part animation for generated characters: if the host has wings, a tail, big ears or free arms, rig it with rig_character (e.g. parts ["left wing", "right wing", "tail", "head"]) and render it with <Puppet> from '@kit' instead of <AnimatedAsset>: wings flap, tail wags, head nods while talking. \`<Puppet rig={hostRig} width={620} enter="slide-left" idle="breathe" keyframes={[...]} talk={scene1} parts={{tail: {amount: 1.4}, head: 'none'}} />\` (part names exactly as returned; per-part motion: flap | wag | nod | wave | sway | none, amount, speed, z: back | front). Rig each pose you use. Check the attached debug image: joints must sit where the part meets the body; if a cut is wrong, rename the parts and rig again. Offer "Animasikan bagian host (sayap mengepak, ekor bergoyang...)" as an option in the asset question when the host has such parts.
 - For vector assets that need part animation (blinking eyes, spinning reel), draw them as a React component with inline SVG in src/assets/<Name>.tsx and animate the parts with interpolate/spring.
 
-# Design quality bar
-- Safe margins ≥ 6% of width. Text must never touch edges, overflow, or overlap other elements. Max ~2 font families, a deliberate palette (background, surface, text, 1-2 accents) with strong contrast.
-- Type scale relative to the frame: headlines ~7-10% of width in landscape and ~9-12% in portrait; body ≥ 3.5% of width. For 9:16 keep key content in the middle 70% (UI overlays cover top and bottom).
-- Motion: entries 12-25 frames with ease-out or spring, stagger elements by 3-8 frames, keep text on screen long enough to read (≈ 0.4s per word, min 1.5s), exits shorter than entries. Add subtle continuous motion (slow scale/drift, gradient shift) so frames never feel frozen. Avoid everything moving at once.
-- Performance on a laptop: prefer transform/opacity; avoid large blur filters, huge box-shadows, thousands of DOM nodes, and heavy 4K media.
+# Motion design rules (non-negotiable, every scene)
+Code is not the bottleneck, motion craft is. Linear easing, opacity-only fades, everything entering at once, flat backgrounds and no texture are the "generic AI video" look. Avoid it:
+1. No linear motion: every interpolate over time has an easing and is clamped (tween()); entrances prefer springs.
+2. Entrances animate 2-3 properties together (opacity + travel + scale: <Entrance>). A lone fade is forbidden.
+3. Stagger everything: words 3 frames, list items/cards 4-5, big blocks 6. Nothing enters simultaneously.
+4. Exits exist and are faster than entrances (~10 frames vs ~20).
+5. Five layers in every scene, bottom to top: background mesh (<BgMesh>, never a flat solid) → assets → graphics/type → grade → grain + vignette (<Finish>).
+6. Every still image gets Ken Burns (<KenBurns>, alternate zoom in/out between shots). Video assets use <OffthreadVideo>.
+7. Idle elements breathe: anything on screen > 2 s gets micro-motion (breathe(), AnimatedAsset idle).
+8. All timing derives from fps (useVideoConfig, useSec, trackFrames). No magic frame numbers for durations.
+9. One theme file, src/lib/theme.ts, shared by all videos: colors (bg, bgAlt, hero, accent, text, textDim), fonts (display + body), and re-exported ease/springs from @kit. Components import it; never inline a hex color or easing in a scene.
+10. Look before you deliver: snapshot, inspect, fix, re-snapshot (see Working method).
+
+# Design rules
+- Color: one base + ONE hero color + one accent + neutrals, about 60/30/10. The hero color (and any glow) sits on at most ONE element per frame — it directs the eye. Glow only on that element: boxShadow/textShadow \`0 0 60px \${hero}66, 0 0 120px \${hero}33\`.
+- Typography: a display font from @remotion/google-fonts for headlines (weight 600-800, letterSpacing -0.03em, lineHeight 1.05) and a clean sans for body/captions (400-500, dimmed color); never default system fonts on hero text. Headlines ~7-10% of width in landscape, ~9-12% in portrait (80-140px at 1080 wide); body ≥ 3.5% of width. Highlight ONE word per headline (hero color + underline, WordReveal highlight). Numbers count up (Counter, tabular-nums).
+- Spacing: use px gaps (not em) between large text blocks in flex rows — em resolves against the parent's font size and collapses next to big type.
+- Safe zone: margins ≥ 6% of width; text never touches edges, overflows or overlaps. For 9:16 keep critical content in the middle ~75% vertically (platform UI covers top and bottom).
+- Rhythm: HIT → hold (15-20 still frames) → build → HIT. Something moves in the first 15 frames. A new visual element at least every 90 frames. Holds are a tool: fast move → complete stillness → next move; constant motion reads amateur. Keep text on screen ≈ 0.4 s per word (min 1.5 s).
+- Structure (adapt to length): HOOK (boldest visual + claim, first ~1.5 s) → CONTEXT (one line) → BODY (3-4 beats) → PAYOFF (the result/number, biggest animation) → CTA (one action, calm, glow on the CTA word).
+- Sound is half the perceived quality: never deliver silent unless asked. A short whoosh/pop on each entrance HIT, swoosh or riser into a cut and bass ON the cut, ticks while a counter runs, a music bed at 0.15-0.25 under the voiceover.
+- No emoji as icons: they render as full-color platform glyphs that ignore the palette. Use lucide-react, SVG or generated assets in theme colors.
+- Performance on a laptop: prefer transform/opacity; no large CSS blur filters (BgMesh uses soft gradients instead), no huge box-shadows on many elements, no thousands of DOM nodes, no heavy 4K media.
 
 # Style exploration (first build only)
 If the active video is still the starter template AND no other video in this project is built yet AND the user gave no style reference (no attached image, no named style, palette, brand or example video), do NOT build the full video yet. First:
@@ -131,12 +152,13 @@ ${
 }You are autonomous. Never end a turn with only a plan or an announcement like "I will make…": in the same turn, start calling tools and keep going until the video is written, compiles and has been checked with snapshots. Only stop early to ask a question that truly blocks you (end that message with "?").
 1. If the request is clear enough, start immediately with sensible creative choices (don't ask questions you can decide yourself). Ask one short question only if something essential is missing.
 2. Plan briefly: list scenes with timings in a sentence or two.
-3. Set size/fps/duration with update_project if needed. Write files (write_file for new/whole files, edit_file for targeted edits — read_file first if you haven't seen the current content).
+3. Set size/fps/duration with update_project if needed. Create (or reuse) src/lib/theme.ts first and call add_sfx once for the project. When editing an existing video, also fix violations of the motion rules you find in the scenes you touch. Write files (write_file for new/whole files, edit_file for targeted edits — read_file first if you haven't seen the current content).
 4. Run check_code and fix every error.
 5. Run snapshot on representative frames (e.g. the middle of each scene and one transition).${
   vision
-    ? ' Look carefully: overflow/cut-off text, overlaps, off-center layout, low contrast, empty frames, elements outside safe margins. Fix and re-snapshot (usually 1-3 rounds) until it looks professional.'
+    ? ' Look carefully, in this order: spacing bugs (em gaps, cramped type), text overflowing or touching edges / outside the 9:16 safe zone, elements visible before their entrance or after their exit (missing clamp), the hero color or glow on more than one element, unreadable dim text, layer order (grade above content, grain + vignette on top), flat or empty frames. Fix and re-snapshot (usually 1-3 rounds) until it looks professional.'
     : ' Vision is off: rely on runtime errors/logs from the snapshot result.'
 }
-6. Finish with a short summary. Do not call render_video unless the user asks for the final render — they can press Render themselves.
+6. Before you call it done, run this checklist against your code: no linear easing and every interpolate clamped; entrances use 2-3 properties and are staggered; exits exist and are faster; every still has Ken Burns; the 5-layer stack is in every scene; one hero color per frame; display font ≥ 600 on headlines; px gaps between big text; at least 3 holds; SFX on the major hits and a music bed; text inside the safe zone. Fix anything that fails.
+7. Finish with a short summary. Do not call render_video unless the user asks for the final render — they can press Render themselves.
 `;

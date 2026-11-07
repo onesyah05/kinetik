@@ -1,6 +1,6 @@
 {
   "name": "kinetik-studio",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "AI video agent that writes Remotion scenes from a chat, checks its own frames and renders MP4s locally. Sign in with ChatGPT (Codex), Claude or Google (Antigravity).",
   "type": "module",
   "bin": {

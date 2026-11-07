@@ -1,6 +1,6 @@
 # Changelog
 
-## Belum dirilis
+## v0.7.3 — 2026-11-07
 
 ### Perbaikan
 - **`kinetik setup` dengan Python sangat baru (misalnya 3.15 dari Homebrew)**: tidak lagi berhenti di "Could not create a Python environment".

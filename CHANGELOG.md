@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.5 — 2026-11-07
+
+### Perbaikan
+- **Error `api.checkUpdate is not a function` atau halaman kosong setelah update** (instalasi npm, termasuk di Mac). Penyebabnya, browser menyimpan file tampilan Kinetik versi lama selama setahun, lalu mencampurnya dengan file versi baru. Sekarang setiap versi memakai cache sendiri dan file tampilan selalu dicek ulang, jadi setelah update yang termuat pasti versi baru. Cache versi lama dihapus otomatis.
+
 ## v0.7.4 — 2026-11-07
 
 ### Perbaikan

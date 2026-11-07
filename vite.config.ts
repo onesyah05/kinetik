@@ -2,14 +2,20 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
+import fs from 'node:fs';
 import {DATA, WORKSPACE} from './server/paths';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version as string;
+export const VITE_CACHE_ROOT = path.join(DATA, 'vite');
+export const VITE_CACHE = path.join(VITE_CACHE_ROOT, version);
 
 export default defineConfig({
   root: path.join(root, 'web'),
   // Cache next to the user's data: an npm install folder may be read-only.
-  cacheDir: path.join(DATA, 'vite'),
+  // One folder per version: the browser keeps files tagged ?v=<hash> for a year, and a fresh
+  // cache gives a fresh hash, so an update never mixes old and new UI files.
+  cacheDir: VITE_CACHE,
   plugins: [react()],
   resolve: {
     alias: {'@kit': path.join(root, 'kit', 'index.tsx')},

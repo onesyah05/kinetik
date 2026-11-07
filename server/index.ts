@@ -5,7 +5,7 @@ import express, {type NextFunction, type Request, type Response} from 'express';
 import multer from 'multer';
 import {createServer as createVite} from 'vite';
 import {DATA, HOME, WORKSPACE, linkDependencies, safeJoin, toPosix} from './paths';
-import viteConfig from '../vite.config';
+import viteConfig, {VITE_CACHE, VITE_CACHE_ROOT} from '../vite.config';
 import {exec} from 'node:child_process';
 import {addClient} from './events';
 import {getConfig, saveConfig, type Config} from './config';
@@ -338,6 +338,26 @@ app.use('/api', (err: any, _req: Request, res: Response, _next: NextFunction) =>
 });
 
 // ---------- Web UI (Vite in middleware mode) ----------
+
+// Caches from other versions (and the old shared layout) are dead weight after an update.
+try {
+  for (const name of fs.existsSync(VITE_CACHE_ROOT) ? fs.readdirSync(VITE_CACHE_ROOT) : [])
+    if (path.join(VITE_CACHE_ROOT, name) !== VITE_CACHE) fs.rmSync(path.join(VITE_CACHE_ROOT, name), {recursive: true, force: true});
+} catch {
+  /* in use or read-only: harmless */
+}
+
+// Installed under node_modules (npm), Vite treats Kinetik's own UI files like third-party
+// packages and marks them "immutable" for a year. Only the pre-bundled deps may be cached
+// like that; everything else must be rechecked so an update is picked up.
+app.use((req, res, next) => {
+  if (!req.url?.includes('/vite/') || !req.url.includes('/deps/')) {
+    const setHeader = res.setHeader.bind(res);
+    res.setHeader = ((name: string, value: any) =>
+      setHeader(name, /^cache-control$/i.test(name) && /immutable/.test(String(value)) ? 'no-cache' : value)) as typeof res.setHeader;
+  }
+  next();
+});
 
 const httpServer = http.createServer(app);
 const vite = await createVite({
